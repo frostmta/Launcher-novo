@@ -3072,4 +3072,53 @@
     <string name="guide_joystick_events_events_text1">The triggerable events are the same as those of regular buttons, so you have plenty of freedom here</string>
     <!-- Closing line of the guide card about editing actual key bindings in the Key section -->
     <string name="guide_joystick_events_events_text2">If you only want to control the game, just edit the actual key bindings in the \"Key\" section</string>
+    <!-- Modrinth-style UI -->
+    <!-- Option of the theme color setting: Zadrinth identity (Modrinth-style layout, blue/violet/pink gradient) -->
+    <string name="theme_color_zadrinth">Zadrinth</string>
+    <!-- Play button label -->
+    <string name="modrinth_play">Play</string>
+    <!-- Main navigation rail: home -->
+    <string name="nav_home">Home</string>
+    <!-- Main navigation rail: browse Modrinth content -->
+    <string name="nav_explore">Explore</string>
+    <!-- Main navigation rail: installed instances -->
+    <string name="nav_library">Library</string>
+    <!-- Main navigation rail: settings -->
+    <string name="nav_settings">Settings</string>
+    <!-- Main navigation rail: account management -->
+    <string name="nav_accounts">Accounts</string>
+    <!-- Main navigation rail: create a new instance -->
+    <string name="nav_create_instance">Create instance</string>
+    <!-- Title of the Library screen -->
+    <string name="library_title">Library</string>
+    <!-- Hint of the search field on the Library screen -->
+    <string name="library_search_hint">Search instances…</string>
+    <!-- Library filter chip: every instance -->
+    <string name="library_filter_all">All</string>
+    <!-- Library filter chip: instances without a mod loader -->
+    <string name="library_filter_vanilla">Vanilla</string>
+    <!-- Library filter chip: instances with a mod loader -->
+    <string name="library_filter_modded">Modded</string>
+    <!-- Library empty state title -->
+    <string name="library_empty_title">No instances yet</string>
+    <!-- Library empty state message -->
+    <string name="library_empty_message">Create an instance or install a modpack to get started.</string>
+    <!-- Library message when the search has no matches -->
+    <string name="library_no_results">No instances match your search.</string>
+    <!-- Instance card: the instance has never been played -->
+    <string name="library_never_played">Never played</string>
+    <!-- Instance card tag: the instance files are broken -->
+    <string name="library_invalid">Broken</string>
+    <!-- Accessibility label of the play button; %1$s is the instance name -->
+    <string name="library_play_instance">Play %1$s</string>
+    <!-- Library refresh button -->
+    <string name="library_refresh">Refresh</string>
+    <!-- Play time format; %1$d hours, %2$d minutes -->
+    <string name="library_time_hours_minutes">%1$dh %2$dmin</string>
+    <!-- Play time format; %1$d minutes -->
+    <string name="library_time_minutes">%1$d min</string>
+    <!-- Play time shorter than one minute -->
+    <string name="library_time_less_minute">&lt; 1 min</string>
+    <!-- Tag on the main screen required by the Zalith Launcher 2 license (GPLv3 section 7 additional terms) -->
+    <string name="unofficial_modified_version">Unofficial modified version</string>
 </resources>

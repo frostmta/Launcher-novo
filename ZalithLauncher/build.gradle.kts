@@ -15,7 +15,9 @@ plugins {
     id("com.movtery.buildkeys")
 }
 
+//Pacote do código (namespace/R/JNI) continua o do Zalith; o ID do app é próprio do Zadrinth
 val zalithPackageName = "com.movtery.zalithlauncher"
+val zadrinthApplicationId = "io.github.frostmta.zadrinth"
 val launcherAPPName = project.findProperty("launcher_app_name") as? String ?: error("The \"launcher_app_name\" property is not set in gradle.properties.")
 val launcherName = project.findProperty("launcher_name") as? String ?: error("The \"launcher_name\" property is not set in gradle.properties.")
 val launcherShortName = project.findProperty("launcher_short_name") as? String ?: error("The \"launcher_short_name\" property is not set in gradle.properties.")
@@ -115,10 +117,13 @@ android {
 
     signingConfigs {
         create("releaseBuild") {
-            storeFile = file("zalith_launcher.jks")
-            storePassword = getKeyFromLocal("STORE_PASSWORD", ".store_password.txt")
-            keyAlias = "movtery_zalith"
-            keyPassword = getKeyFromLocal("KEY_PASSWORD", ".key_password.txt")
+            //Chave própria do Zadrinth, criada pelo workflow "Gerar chave de assinatura".
+            //É um PKCS12: a senha da chave é a mesma do arquivo (secret STORE_PASSWORD).
+            val releaseStorePassword = getKeyFromLocal("STORE_PASSWORD", ".store_password.txt")
+            storeFile = file("zadrinth_release.jks")
+            storePassword = releaseStorePassword
+            keyAlias = "zadrinth"
+            keyPassword = releaseStorePassword
         }
         create("debugBuild") {
             storeFile = file("zalith_launcher_debug.jks")
@@ -129,8 +134,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = zalithPackageName
-        applicationIdSuffix = ".v2"
+        applicationId = zadrinthApplicationId
         minSdk = 26
         targetSdk = 34
         versionCode = launcherVersionCode

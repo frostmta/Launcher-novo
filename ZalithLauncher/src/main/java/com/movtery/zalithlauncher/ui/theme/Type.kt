@@ -19,5 +19,23 @@
 package com.movtery.zalithlauncher.ui.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.font.FontWeight
 
-val AppTypography = Typography()
+private val BaseTypography = Typography()
+
+/**
+ * Tipografia no estilo Modrinth: títulos com peso forte e rótulos semibold.
+ * (A fonte Inter do Modrinth pode ser adicionada depois em res/font.)
+ */
+val AppTypography = BaseTypography.copy(
+    displayLarge = BaseTypography.displayLarge.copy(fontWeight = FontWeight.Bold),
+    displayMedium = BaseTypography.displayMedium.copy(fontWeight = FontWeight.Bold),
+    displaySmall = BaseTypography.displaySmall.copy(fontWeight = FontWeight.Bold),
+    headlineLarge = BaseTypography.headlineLarge.copy(fontWeight = FontWeight.Bold),
+    headlineMedium = BaseTypography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+    headlineSmall = BaseTypography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+    titleLarge = BaseTypography.titleLarge.copy(fontWeight = FontWeight.Bold),
+    titleMedium = BaseTypography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+    titleSmall = BaseTypography.titleSmall.copy(fontWeight = FontWeight.SemiBold),
+    labelLarge = BaseTypography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+)

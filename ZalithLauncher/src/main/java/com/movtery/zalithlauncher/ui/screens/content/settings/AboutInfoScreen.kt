@@ -66,6 +66,7 @@ import com.movtery.zalithlauncher.path.URL_MCMOD
 import com.movtery.zalithlauncher.path.URL_PROJECT
 import com.movtery.zalithlauncher.path.URL_SUPPORT
 import com.movtery.zalithlauncher.path.URL_WEBLATE
+import com.movtery.zalithlauncher.path.URL_ZALITH_PROJECT
 import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.components.AnimatedLazyColumn
 import com.movtery.zalithlauncher.ui.components.CardTitleLayout
@@ -129,6 +130,12 @@ fun AboutInfoScreen(
                             title = stringResource(R.string.about_launcher_author_movtery_title),
                             text = stringResource(R.string.about_launcher_author_movtery_text, launcherName),
                             button = {
+                                //Zadrinth é baseado no Zalith Launcher 2: link para o projeto original
+                                Button(
+                                    onClick = { openLink(URL_ZALITH_PROJECT) }
+                                ) {
+                                    Text(text = stringResource(R.string.about_launcher_project_link))
+                                }
                                 Button(
                                     onClick = { openLink(URL_SUPPORT) }
                                 ) {

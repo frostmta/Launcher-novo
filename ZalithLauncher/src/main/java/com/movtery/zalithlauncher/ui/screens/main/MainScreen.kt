@@ -18,6 +18,19 @@
 
 package com.movtery.zalithlauncher.ui.screens.main
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
+import androidx.compose.ui.unit.Dp
+import com.movtery.zalithlauncher.ui.screens.content.LibraryScreen
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthDimens
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTag
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTheme
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -105,7 +118,6 @@ import com.movtery.zalithlauncher.ui.screens.content.VersionSettingsScreen
 import com.movtery.zalithlauncher.ui.screens.content.VersionsManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.WebViewScreen
 import com.movtery.zalithlauncher.ui.screens.content.addoninfo.AddonInfoScreen
-import com.movtery.zalithlauncher.ui.screens.content.navigateToDownload
 import com.movtery.zalithlauncher.ui.screens.navigateTo
 import com.movtery.zalithlauncher.ui.screens.onBack
 import com.movtery.zalithlauncher.ui.screens.rememberTransitionSpec
@@ -161,88 +173,181 @@ fun MainScreen(
     val isBackgroundValid = LocalBackgroundViewModel.current?.isValid == true
     val launcherBackgroundOpacity = AllSettings.launcherBackgroundOpacity.state.toFloat() / 100f
 
+    val modrinthColors = ModrinthTheme.colors
+    //Barra lateral + barra superior usam a cor de superfície; o conteúdo usa o fundo principal
+    val chromeColor = if (isBackgroundValid) {
+        modrinthColors.surface.copy(alpha = launcherBackgroundOpacity)
+    } else modrinthColors.surface
     val backgroundColor = if (isBackgroundValid) {
         backgroundColor().copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
+    /** Navega para um destino principal: a pilha vira [Início, destino] */
+    val navigateTopLevel: (TitledNavKey) -> Unit = { key ->
+        val main = screenBackStackModel.mainScreen
+        main.clearWith(NormalNavKey.LauncherMain)
+        if (key !is NormalNavKey.LauncherMain) {
+            main.navigateTo(key, useClassEquality = true)
+        }
+    }
+
+    /** Abre a tela de download/criação de instância na aba indicada */
+    val navigateToDownloadTab: (TitledNavKey) -> Unit = { tab ->
+        screenBackStackModel.downloadScreen.clearWith(tab)
+        navigateTopLevel(screenBackStackModel.downloadScreen)
+    }
+
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = backgroundColor,
+        color = chromeColor,
         contentColor = onBackgroundColor()
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-        ) {
-            TopBar(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(40.dp),
-                mainScreenKey = mainScreenKey,
-                inLauncherScreen = inLauncherScreen,
-                taskRunning = taskRunning,
-                isTasksExpanded = isTaskMenuExpanded,
-                contentColor = onBackgroundColor(),
-                onScreenBack = {
-                    screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
+        Row(modifier = Modifier.fillMaxSize()) {
+            ModrinthNavRail(
+                modifier = Modifier.fillMaxHeight(),
+                selected = mainScreenKey.toMainNavDestination(),
+                accountsSelected = mainScreenKey is NormalNavKey.AccountManager,
+                onNavigate = { destination ->
+                    when (destination) {
+                        MainNavDestination.HOME -> {
+                            if (!inLauncherScreen) toMainScreen()
+                        }
+                        MainNavDestination.EXPLORE -> {
+                            if (mainScreenKey !is NestedNavKey.Download) {
+                                navigateToDownloadTab(screenBackStackModel.downloadModPackScreen)
+                            }
+                        }
+                        MainNavDestination.LIBRARY -> {
+                            if (mainScreenKey !is NormalNavKey.Library) {
+                                navigateTopLevel(NormalNavKey.Library)
+                            }
+                        }
+                        MainNavDestination.SETTINGS -> {
+                            if (mainScreenKey !is NestedNavKey.Settings) {
+                                navigateTopLevel(screenBackStackModel.settingsScreen)
+                            }
+                        }
+                    }
                 },
-                toMainScreen = toMainScreen,
-                toSettingsScreen = {
-                    screenBackStackModel.mainScreen.removeAndNavigateTo(
-                        removes = screenBackStackModel.clearBeforeNavKeys,
-                        screenKey = screenBackStackModel.settingsScreen
-                    )
+                onCreateInstance = {
+                    navigateToDownloadTab(screenBackStackModel.downloadGameScreen)
                 },
-                toDownloadScreen = {
-                    screenBackStackModel.navigateToDownload()
-                },
-                toMultiplayerScreen = {
-                    screenBackStackModel.mainScreen.removeAndNavigateTo(
-                        removes = screenBackStackModel.clearBeforeNavKeys,
-                        screenKey = NormalNavKey.Multiplayer
-                    )
-                },
-                openFileManager = {
-                    eventViewModel.sendEvent(
-                        EventViewModel.Event.OpenFileManager(
-                            rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
-                        )
-                    )
-                },
-                changeExpandedState = {
-                    changeTasksExpandedState()
-                },
+                onOpenAccounts = {
+                    if (mainScreenKey !is NormalNavKey.AccountManager) {
+                        navigateTopLevel(NormalNavKey.AccountManager())
+                    }
+                }
             )
 
-            Box(
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .fillMaxHeight()
                     .weight(1f)
             ) {
-                NavStateHost(rootKey = screenBackStackModel.mainScreen) {
-                    NavigationUI(
-                        modifier = Modifier.fillMaxSize(),
-                        screenBackStackModel = screenBackStackModel,
-                        toMainScreen = toMainScreen,
-                        eventViewModel = eventViewModel,
-                        modpackImportViewModel = modpackImportViewModel,
-                        modifyVersionViewModel = modifyVersionViewModel,
-                        submitError = submitError
-                    )
-                }
-
-                TaskMenu(
-                    isExpanded = isTaskMenuExpanded,
+                TopBar(
                     modifier = Modifier
-                        .fillMaxHeight()
-                        .fillMaxWidth(0.3f)
-                        .align(Alignment.CenterStart)
-                        .padding(all = 6.dp)
+                        .fillMaxWidth()
+                        .height(44.dp),
+                    mainScreenKey = mainScreenKey,
+                    inLauncherScreen = inLauncherScreen,
+                    taskRunning = taskRunning,
+                    isTasksExpanded = isTaskMenuExpanded,
+                    contentColor = onBackgroundColor(),
+                    onScreenBack = {
+                        screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
+                    },
+                    toMultiplayerScreen = {
+                        screenBackStackModel.mainScreen.removeAndNavigateTo(
+                            removes = screenBackStackModel.clearBeforeNavKeys,
+                            screenKey = NormalNavKey.Multiplayer
+                        )
+                    },
+                    openFileManager = {
+                        eventViewModel.sendEvent(
+                            EventViewModel.Event.OpenFileManager(
+                                rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
+                            )
+                        )
+                    },
+                    changeExpandedState = {
+                        changeTasksExpandedState()
+                    },
+                )
+
+                //Painel de conteúdo com canto superior arredondado, como no Modrinth App
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .clip(RoundedCornerShape(topStart = ModrinthDimens.CardRadius))
+                        .background(backgroundColor)
+                        .topStartPanelBorder(
+                            color = modrinthColors.border,
+                            radius = ModrinthDimens.CardRadius,
+                            width = ModrinthDimens.BorderWidth
+                        )
                 ) {
-                    changeTasksExpandedState()
+                    NavStateHost(rootKey = screenBackStackModel.mainScreen) {
+                        NavigationUI(
+                            modifier = Modifier.fillMaxSize(),
+                            screenBackStackModel = screenBackStackModel,
+                            toMainScreen = toMainScreen,
+                            eventViewModel = eventViewModel,
+                            modpackImportViewModel = modpackImportViewModel,
+                            modifyVersionViewModel = modifyVersionViewModel,
+                            submitError = submitError,
+                            navigateToCreateInstance = {
+                                navigateToDownloadTab(screenBackStackModel.downloadGameScreen)
+                            }
+                        )
+                    }
+
+                    TaskMenu(
+                        isExpanded = isTaskMenuExpanded,
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .fillMaxWidth(0.3f)
+                            .align(Alignment.CenterStart)
+                            .padding(all = 6.dp)
+                    ) {
+                        changeTasksExpandedState()
+                    }
                 }
             }
         }
+    }
+}
+
+/**
+ * Borda fina só no topo e na lateral inicial do painel de conteúdo,
+ * contornando o canto arredondado (as outras bordas encostam na tela).
+ */
+private fun Modifier.topStartPanelBorder(
+    color: Color,
+    radius: Dp,
+    width: Dp
+): Modifier = drawWithContent {
+    drawContent()
+    val stroke = width.toPx()
+    val half = stroke / 2f
+    val r = radius.toPx()
+    val path = Path().apply {
+        moveTo(half, size.height)
+        lineTo(half, r)
+        arcTo(
+            rect = Rect(left = half, top = half, right = 2f * r - half, bottom = 2f * r - half),
+            startAngleDegrees = 180f,
+            sweepAngleDegrees = 90f,
+            forceMoveTo = false
+        )
+        lineTo(size.width, half)
+    }
+    if (layoutDirection == LayoutDirection.Rtl) {
+        scale(scaleX = -1f, scaleY = 1f) {
+            drawPath(path = path, color = color, style = Stroke(width = stroke))
+        }
+    } else {
+        drawPath(path = path, color = color, style = Stroke(width = stroke))
     }
 }
 
@@ -255,9 +360,6 @@ private fun <E: TitledNavKey> TopBar(
     modifier: Modifier = Modifier,
     contentColor: Color,
     onScreenBack: () -> Unit,
-    toMainScreen: () -> Unit,
-    toSettingsScreen: () -> Unit,
-    toDownloadScreen: () -> Unit,
     toMultiplayerScreen: () -> Unit,
     openFileManager: () -> Unit,
     changeExpandedState: () -> Unit,
@@ -265,8 +367,6 @@ private fun <E: TitledNavKey> TopBar(
     val festivals = LocalFestivals.current
 
     val inMultiplayerScreen = mainScreenKey is NormalNavKey.Multiplayer
-    val inDownloadScreen = mainScreenKey is NestedNavKey.Download
-    val inSettingsScreen = mainScreenKey is NestedNavKey.Settings
 
     CompositionLocalProvider(
         LocalContentColor provides contentColor
@@ -309,20 +409,6 @@ private fun <E: TitledNavKey> TopBar(
                             )
                         }
 
-                        IconButton(
-                            modifier = Modifier.fillMaxHeight(),
-                            onClick = {
-                                if (!inLauncherScreen) {
-                                    //不在主屏幕时才允许回到主页面
-                                    toMainScreen()
-                                }
-                            }
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_home_filled),
-                                contentDescription = stringResource(R.string.generic_main_menu)
-                            )
-                        }
                     }
                 }
             }
@@ -341,19 +427,31 @@ private fun <E: TitledNavKey> TopBar(
                 val maxLines = 1
 
                 if (parent == null) {
-                    if (festivals.isEmpty()) {
-                        Text(
-                            text = BuildKeys.LAUNCHER_IDENTIFIER,
-                            style = style,
-                            softWrap = softWarp,
-                            maxLines = maxLines
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Image(
+                            modifier = Modifier.size(22.dp),
+                            painter = painterResource(R.drawable.img_launcher),
+                            contentDescription = null
                         )
-                    } else {
-                        FestivalTitleText(
-                            festivals = festivals,
-                            style = style,
-                            maxLines = maxLines
-                        )
+                        if (festivals.isEmpty()) {
+                            Text(
+                                text = BuildKeys.LAUNCHER_NAME,
+                                style = style,
+                                softWrap = softWarp,
+                                maxLines = maxLines
+                            )
+                        } else {
+                            FestivalTitleText(
+                                festivals = festivals,
+                                style = style,
+                                maxLines = maxLines
+                            )
+                        }
+                        //Exigido pelos termos adicionais da licença do Zalith Launcher 2 (GPLv3, seção 7)
+                        ModrinthTag(text = stringResource(R.string.unofficial_modified_version))
                     }
                 } else {
                     val titleText = if (child != null) {
@@ -426,23 +524,6 @@ private fun <E: TitledNavKey> TopBar(
                     },
                 )
 
-                TopBarRailItem(
-                    selected = inDownloadScreen,
-                    painter = painterResource(R.drawable.ic_download_2_filled),
-                    text = stringResource(R.string.generic_download),
-                    onClick = {
-                        if (!inDownloadScreen) toDownloadScreen()
-                    },
-                )
-
-                TopBarRailItem(
-                    selected = inSettingsScreen,
-                    painter = painterResource(R.drawable.ic_settings_filled),
-                    text = stringResource(R.string.generic_setting),
-                    onClick = {
-                        if (!inSettingsScreen) toSettingsScreen()
-                    },
-                )
             }
         }
     }
@@ -491,7 +572,8 @@ private fun NavigationUI(
     eventViewModel: EventViewModel,
     modpackImportViewModel: ModpackImportViewModel,
     modifyVersionViewModel: ModifyVersionViewModel,
-    submitError: (ErrorViewModel.ThrowableMessage) -> Unit
+    submitError: (ErrorViewModel.ThrowableMessage) -> Unit,
+    navigateToCreateInstance: () -> Unit,
 ) {
     val backStack = screenBackStackModel.mainScreen.backStack
     val currentKey = backStack.lastOrNull()
@@ -552,6 +634,23 @@ private fun NavigationUI(
                         },
                         startGuideOnce = { keys ->
                             eventViewModel.sendStartGuideOnce(keys)
+                        }
+                    )
+                }
+                entry<NormalNavKey.Library> {
+                    LibraryScreen(
+                        backStackViewModel = screenBackStackModel,
+                        onOpenInstance = navigateToVersions,
+                        onPlayInstance = { version ->
+                            //A instância jogada passa a ser a atual (aparece no Início)
+                            VersionsManager.saveVersion(version)
+                            eventViewModel.sendEvent(
+                                EventViewModel.Event.Launch.Game(version)
+                            )
+                        },
+                        onCreateInstance = navigateToCreateInstance,
+                        onManageInvalid = {
+                            screenBackStackModel.mainScreen.navigateTo(NormalNavKey.VersionsManager)
                         }
                     )
                 }

@@ -55,6 +55,7 @@ import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.notification.NotificationManager
 import com.movtery.zalithlauncher.path.PathManager
+import com.movtery.zalithlauncher.path.URL_RELEASES
 import com.movtery.zalithlauncher.path.URL_SUPPORT
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.ui.AndroidStringText
@@ -224,12 +225,8 @@ class MainActivity : BaseAppCompatActivity() {
         //初始化通知管理（创建渠道）
         NotificationManager.initManager(this)
 
-        //检查更新
-        if (!isImporting && launcherUpgradeViewModel.operation == LauncherUpgradeOperation.None) {
-            lifecycleScope.launch {
-                launcherUpgradeViewModel.checkOnAppStart()
-            }
-        }
+        //Zadrinth: a verificação automática do Zalith foi desligada, porque o servidor
+        //de atualizações dele aponta para o APK oficial do Zalith Launcher, não para este fork.
 
         //拉取当月赞助者数据
         lifecycleScope.launch {
@@ -599,6 +596,17 @@ class MainActivity : BaseAppCompatActivity() {
      * 检查启动器更新
      */
     private fun checkUpdate() {
+        //Zadrinth: abre a página de versões do projeto no GitHub
+        lifecycleScope.launch(Dispatchers.Main) {
+            openLink(URL_RELEASES)
+        }
+    }
+
+    /**
+     * Verificação de atualização original do Zalith (não usada no Zadrinth)
+     */
+    @Suppress("unused")
+    private fun checkZalithUpdate() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 val success = launcherUpgradeViewModel.checkManually(

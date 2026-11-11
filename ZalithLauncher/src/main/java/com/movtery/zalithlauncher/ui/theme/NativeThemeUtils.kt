@@ -27,6 +27,7 @@ import android.os.Build
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
+import androidx.compose.material3.ColorScheme
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.google.android.material.button.MaterialButton
@@ -37,6 +38,8 @@ import com.google.android.material.color.utilities.Variant
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.DarkMode
+import com.movtery.zalithlauncher.ui.theme.modrinth.ZadrinthDarkColorScheme
+import com.movtery.zalithlauncher.ui.theme.modrinth.ZadrinthLightColorScheme
 
 data class NativeColorScheme(
     val primary: Color,
@@ -94,9 +97,50 @@ fun isDarkTheme(context: Context): Boolean {
  */
 fun getColorScheme(context: Context): NativeColorScheme {
     val darkTheme = isDarkTheme(context)
+    if (AllSettings.launcherColorTheme.state == ColorThemeType.ZADRINTH) {
+        //Paleta exata do Zadrinth, sem gerar tons a partir de uma cor semente
+        return (if (darkTheme) ZadrinthDarkColorScheme else ZadrinthLightColorScheme).toNativeColorScheme()
+    }
     val seedColor = getSeedColor(context, darkTheme)
     return buildColorScheme(seedColor, darkTheme)
 }
+
+private fun ColorScheme.toNativeColorScheme() = NativeColorScheme(
+    primary = primary,
+    onPrimary = onPrimary,
+    primaryContainer = primaryContainer,
+    onPrimaryContainer = onPrimaryContainer,
+    secondary = secondary,
+    onSecondary = onSecondary,
+    secondaryContainer = secondaryContainer,
+    onSecondaryContainer = onSecondaryContainer,
+    tertiary = tertiary,
+    onTertiary = onTertiary,
+    tertiaryContainer = tertiaryContainer,
+    onTertiaryContainer = onTertiaryContainer,
+    error = error,
+    onError = onError,
+    errorContainer = errorContainer,
+    onErrorContainer = onErrorContainer,
+    background = background,
+    onBackground = onBackground,
+    surface = surface,
+    onSurface = onSurface,
+    surfaceVariant = surfaceVariant,
+    onSurfaceVariant = onSurfaceVariant,
+    outline = outline,
+    outlineVariant = outlineVariant,
+    inverseSurface = inverseSurface,
+    inverseOnSurface = inverseOnSurface,
+    inversePrimary = inversePrimary,
+    surfaceDim = surfaceDim,
+    surfaceBright = surfaceBright,
+    surfaceContainerLowest = surfaceContainerLowest,
+    surfaceContainerLow = surfaceContainerLow,
+    surfaceContainer = surfaceContainer,
+    surfaceContainerHigh = surfaceContainerHigh,
+    surfaceContainerHighest = surfaceContainerHighest,
+)
 
 @SuppressLint("RestrictedApi")
 private fun buildColorScheme(seedColor: Int, darkTheme: Boolean): NativeColorScheme {
@@ -203,6 +247,7 @@ private fun getSeedColor(context: Context, darkTheme: Boolean): Int {
 
 private fun getPredefinedSeedColor(theme: ColorThemeType, darkTheme: Boolean): Int {
     return when (theme) {
+        ColorThemeType.ZADRINTH -> if (darkTheme) 0xFF9D7BFF.toInt() else 0xFF6D4AE0.toInt()
         ColorThemeType.EMBERMIRE -> if (darkTheme) 0xFFFFB598.toInt() else 0xFFA63A17.toInt()
         ColorThemeType.VELVET_ROSE -> if (darkTheme) 0xFFF9B2D2.toInt() else 0xFF723D57.toInt()
         ColorThemeType.MISTWAVE -> if (darkTheme) 0xFFCEF3F9.toInt() else 0xFF426469.toInt()
