@@ -117,10 +117,13 @@ android {
 
     signingConfigs {
         create("releaseBuild") {
-            storeFile = file("zalith_launcher.jks")
-            storePassword = getKeyFromLocal("STORE_PASSWORD", ".store_password.txt")
-            keyAlias = "movtery_zalith"
-            keyPassword = getKeyFromLocal("KEY_PASSWORD", ".key_password.txt")
+            //Chave própria do Zadrinth, criada pelo workflow "Gerar chave de assinatura".
+            //É um PKCS12: a senha da chave é a mesma do arquivo (secret STORE_PASSWORD).
+            val releaseStorePassword = getKeyFromLocal("STORE_PASSWORD", ".store_password.txt")
+            storeFile = file("zadrinth_release.jks")
+            storePassword = releaseStorePassword
+            keyAlias = "zadrinth"
+            keyPassword = releaseStorePassword
         }
         create("debugBuild") {
             storeFile = file("zalith_launcher_debug.jks")
