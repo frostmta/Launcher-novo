@@ -19,6 +19,13 @@
 package com.movtery.zalithlauncher.ui.theme.modrinth
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.ProvideTextStyle
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -104,7 +111,7 @@ fun ModrinthCard(
 }
 
 /**
- * Botão "Jogar" verde com ícone de triângulo.
+ * Botão "Jogar" com ícone de triângulo e degradê da marca.
  */
 @Composable
 fun ModrinthPlayButton(
@@ -135,7 +142,8 @@ fun ModrinthPlayButton(
 }
 
 /**
- * Botão circular verde só com o triângulo de "Jogar" (usado nos cards).
+ * Botão circular só com o triângulo de "Jogar" (usado nos cards),
+ * preenchido com o degradê da marca.
  */
 @Composable
 fun ModrinthPlayIconButton(
@@ -146,31 +154,27 @@ fun ModrinthPlayIconButton(
     size: Dp = 40.dp,
 ) {
     val colors = ModrinthTheme.colors
-    Surface(
-        onClick = onClick,
+    Box(
         modifier = modifier
             .size(size)
-            .semantics {
-                this.contentDescription = contentDescription
-                role = Role.Button
-            },
-        enabled = enabled,
-        shape = CircleShape,
-        color = if (enabled) colors.brand else colors.surfaceRaised,
-        contentColor = if (enabled) colors.onBrand else colors.textSecondary,
+            .clip(CircleShape)
+            .background(if (enabled) colors.brandBrush else SolidColor(colors.surfaceRaised))
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .semantics { this.contentDescription = contentDescription },
+        contentAlignment = Alignment.Center
     ) {
-        Box(contentAlignment = Alignment.Center) {
-            Icon(
-                modifier = Modifier.size(size * 0.55f),
-                painter = painterResource(R.drawable.ic_play_arrow_filled),
-                contentDescription = null
-            )
-        }
+        Icon(
+            modifier = Modifier.size(size * 0.55f),
+            painter = painterResource(R.drawable.ic_play_arrow_filled),
+            contentDescription = null,
+            tint = if (enabled) colors.onBrandBrush else colors.textSecondary
+        )
     }
 }
 
 /**
- * Botão primário verde (texto escuro sobre o verde da marca).
+ * Botão de ação principal, preenchido com o degradê da marca
+ * (texto escuro para manter contraste).
  */
 @Composable
 fun ModrinthBrandButton(
@@ -181,20 +185,26 @@ fun ModrinthBrandButton(
     content: @Composable RowScope.() -> Unit
 ) {
     val colors = ModrinthTheme.colors
-    Button(
-        onClick = onClick,
-        modifier = modifier,
-        enabled = enabled,
-        shape = ModrinthButtonShape,
-        colors = ButtonDefaults.buttonColors(
-            containerColor = colors.brand,
-            contentColor = colors.onBrand,
-            disabledContainerColor = colors.surfaceRaised,
-            disabledContentColor = colors.textSecondary,
-        ),
-        contentPadding = contentPadding,
-        content = content
-    )
+    val contentColor = if (enabled) colors.onBrandBrush else colors.textSecondary
+    Box(
+        modifier = modifier
+            .defaultMinSize(minHeight = 40.dp)
+            .clip(ModrinthButtonShape)
+            .background(if (enabled) colors.brandBrush else SolidColor(colors.surfaceRaised))
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            .padding(contentPadding),
+        contentAlignment = Alignment.Center
+    ) {
+        CompositionLocalProvider(LocalContentColor provides contentColor) {
+            ProvideTextStyle(MaterialTheme.typography.labelLarge) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    content = content
+                )
+            }
+        }
+    }
 }
 
 /**
@@ -337,7 +347,7 @@ fun ModrinthSearchField(
 }
 
 /**
- * Chip de filtro: selecionado fica com o realce verde da marca.
+ * Chip de filtro: selecionado fica com o realce violeta da marca.
  */
 @Composable
 fun ModrinthFilterChip(

@@ -1226,7 +1226,7 @@
     <string name="guide_joystick_events_lock_text4">Toque no botão para editar os eventos de acionamento</string>
     <string name="guide_joystick_events_events_text1">Os eventos acionáveis são os mesmos dos botões normais, com muita liberdade</string>
     <string name="guide_joystick_events_events_text2">Se quiser apenas controlar o jogo, edite as associações de teclas reais na secção “Chave”</string>
-    <string name="theme_color_modrinth">Modrinth</string>
+    <string name="theme_color_zadrinth">Zadrinth</string>
     <string name="modrinth_play">Jogar</string>
     <string name="nav_home">Início</string>
     <string name="nav_explore">Explorar</string>
@@ -1249,4 +1249,5 @@
     <string name="library_time_hours_minutes">%1$dh %2$dmin</string>
     <string name="library_time_minutes">%1$d min</string>
     <string name="library_time_less_minute">&lt; 1 min</string>
+    <string name="unofficial_modified_version">Versão modificada não oficial</string>
 </resources>

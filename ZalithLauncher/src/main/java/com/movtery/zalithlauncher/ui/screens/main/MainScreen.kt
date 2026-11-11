@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.ui.screens.main
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.drawWithContent
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.unit.Dp
 import com.movtery.zalithlauncher.ui.screens.content.LibraryScreen
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthDimens
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTag
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTheme
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
@@ -425,19 +427,31 @@ private fun <E: TitledNavKey> TopBar(
                 val maxLines = 1
 
                 if (parent == null) {
-                    if (festivals.isEmpty()) {
-                        Text(
-                            text = BuildKeys.LAUNCHER_IDENTIFIER,
-                            style = style,
-                            softWrap = softWarp,
-                            maxLines = maxLines
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Image(
+                            modifier = Modifier.size(22.dp),
+                            painter = painterResource(R.drawable.img_launcher),
+                            contentDescription = null
                         )
-                    } else {
-                        FestivalTitleText(
-                            festivals = festivals,
-                            style = style,
-                            maxLines = maxLines
-                        )
+                        if (festivals.isEmpty()) {
+                            Text(
+                                text = BuildKeys.LAUNCHER_NAME,
+                                style = style,
+                                softWrap = softWarp,
+                                maxLines = maxLines
+                            )
+                        } else {
+                            FestivalTitleText(
+                                festivals = festivals,
+                                style = style,
+                                maxLines = maxLines
+                            )
+                        }
+                        //Exigido pelos termos adicionais da licença do Zalith Launcher 2 (GPLv3, seção 7)
+                        ModrinthTag(text = stringResource(R.string.unofficial_modified_version))
                     }
                 } else {
                     val titleText = if (child != null) {

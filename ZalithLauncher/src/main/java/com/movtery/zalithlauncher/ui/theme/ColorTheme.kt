@@ -31,8 +31,8 @@ data class ColorTheme(
 )
 
 enum class ColorThemeType {
-    /** Design System inspirado no Modrinth App (padrão) */
-    MODRINTH,
+    /** Identidade do Zadrinth Launcher: layout do Modrinth App com degradê azul/violeta/rosa (padrão) */
+    ZADRINTH,
     DYNAMIC,
     EMBERMIRE,
     VELVET_ROSE,

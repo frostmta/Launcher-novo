@@ -25,149 +25,166 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 
 /**
- * Paleta base inspirada no Modrinth App (desktop).
+ * Paleta do Zadrinth Launcher.
  *
- * O modo escuro é o padrão. Os valores aqui são a única fonte de verdade:
- * eles alimentam o [ColorScheme] do Material3 (para que todas as telas
- * existentes herdem o visual) e os tokens de [ModrinthColors] usados pelos
- * componentes novos.
+ * O layout segue o Modrinth App; as cores vêm da identidade do Zadrinth:
+ * degradê azul → violeta → rosa e fundos escuros puxados para o roxo.
+ * O modo escuro é o padrão. Os valores aqui alimentam o [ColorScheme] do
+ * Material3 (para que todas as telas existentes herdem o visual) e os tokens
+ * de [ModrinthColors] usados pelos componentes novos.
  */
-object ModrinthPalette {
+object ZadrinthPalette {
     // --- Escuro (padrão) ---
     /** Fundo principal do app */
-    val DarkBackground = Color(0xFF16181C)
+    val DarkBackground = Color(0xFF15131C)
     /** Superfícies, cards e barras laterais */
-    val DarkSurface = Color(0xFF26292F)
+    val DarkSurface = Color(0xFF221F2C)
     /** Superfícies elevadas, estados de toque e campos de texto */
-    val DarkSurfaceRaised = Color(0xFF32363E)
-    /** Cor de destaque da marca */
-    val Brand = Color(0xFF1BD96A)
-    /** Texto sobre botões verdes */
-    val OnBrand = Color(0xFF000000)
-    /** Verde da marca a 25% sobre [DarkSurface], já composto (sem alfa) */
-    val DarkBrandHighlight = Color(0xFF23553E)
+    val DarkSurfaceRaised = Color(0xFF2E2A3A)
+    /** Cor de destaque da marca (violeta) */
+    val Brand = Color(0xFF9D7BFF)
+    /** Texto sobre a cor da marca */
+    val OnBrand = Color(0xFF0E0A1A)
+    /** Violeta a ~22% sobre [DarkSurface], já composto (sem alfa) */
+    val DarkBrandHighlight = Color(0xFF3D335A)
+    val DarkOnBrandHighlight = Color(0xFFC4B2FF)
     val DarkTextPrimary = Color(0xFFFFFFFF)
-    val DarkTextSecondary = Color(0xFFB0B5BF)
+    val DarkTextSecondary = Color(0xFFB8B2C9)
     /** Bordas sutis */
-    val DarkBorder = Color(0xFF3B4048)
+    val DarkBorder = Color(0xFF3B3649)
+
+    // --- Degradê da marca (botões Jogar / ações principais) ---
+    val GradientBlue = Color(0xFF6E9BFF)
+    val GradientViolet = Color(0xFF9D7BFF)
+    val GradientPink = Color(0xFFE07BFF)
+    /** Texto sobre o degradê (contraste ≥ 6:1 em todo o degradê) */
+    val OnGradient = Color(0xFF0E0A1A)
 
     // --- Cores de apoio (iguais nos dois modos) ---
-    val Red = Color(0xFFFF496E)
+    val Red = Color(0xFFFF5C7C)
     val Orange = Color(0xFFFFA347)
-    val Blue = Color(0xFF4F9CFF)
-    val Purple = Color(0xFFC78AFF)
+    val Blue = GradientBlue
+    val Pink = GradientPink
 
     // --- Claro (alternativo) ---
-    val LightBackground = Color(0xFFEBEDF0)
+    val LightBackground = Color(0xFFEFECF6)
     val LightSurface = Color(0xFFFFFFFF)
-    val LightSurfaceRaised = Color(0xFFF1F2F4)
-    /** Verde mais escuro para manter contraste sobre fundo claro */
-    val LightBrand = Color(0xFF00843F)
+    val LightSurfaceRaised = Color(0xFFF4F1FA)
+    /** Violeta mais escuro para manter contraste sobre fundo claro */
+    val LightBrand = Color(0xFF6D4AE0)
     val LightOnBrand = Color(0xFFFFFFFF)
-    val LightBrandHighlight = Color(0xFFD3F2E0)
-    val LightTextPrimary = Color(0xFF1A1C20)
-    val LightTextSecondary = Color(0xFF5B616B)
-    val LightBorder = Color(0xFFD5D9DE)
+    val LightBrandHighlight = Color(0xFFE6DEFF)
+    val LightOnBrandHighlight = Color(0xFF3A1F99)
+    val LightTextPrimary = Color(0xFF1B1726)
+    val LightTextSecondary = Color(0xFF5E5870)
+    val LightBorder = Color(0xFFDCD6E8)
 }
 
-/** Esquema Material3 escuro com a paleta do Modrinth */
-val ModrinthDarkColorScheme: ColorScheme = darkColorScheme(
-    primary = ModrinthPalette.Brand,
-    onPrimary = ModrinthPalette.OnBrand,
-    primaryContainer = ModrinthPalette.DarkBrandHighlight,
-    onPrimaryContainer = ModrinthPalette.Brand,
-    inversePrimary = Color(0xFF00843F),
+/** Degradê azul → violeta → rosa da marca */
+val ZadrinthBrandGradient: Brush = Brush.horizontalGradient(
+    listOf(ZadrinthPalette.GradientBlue, ZadrinthPalette.GradientViolet, ZadrinthPalette.GradientPink)
+)
 
-    // Estados selecionados (rails, chips, botões tonais) usam o realce verde do Modrinth
-    secondary = ModrinthPalette.DarkTextSecondary,
-    onSecondary = ModrinthPalette.DarkBackground,
-    secondaryContainer = ModrinthPalette.DarkBrandHighlight,
-    onSecondaryContainer = ModrinthPalette.Brand,
+/** Esquema Material3 escuro do Zadrinth */
+val ZadrinthDarkColorScheme: ColorScheme = darkColorScheme(
+    primary = ZadrinthPalette.Brand,
+    onPrimary = ZadrinthPalette.OnBrand,
+    primaryContainer = ZadrinthPalette.DarkBrandHighlight,
+    onPrimaryContainer = ZadrinthPalette.DarkOnBrandHighlight,
+    inversePrimary = ZadrinthPalette.LightBrand,
 
-    tertiary = ModrinthPalette.Blue,
-    onTertiary = Color(0xFF000000),
-    tertiaryContainer = Color(0xFF1F3A5C),
-    onTertiaryContainer = Color(0xFFD6E6FF),
+    // Estados selecionados (rails, chips, botões tonais) usam o realce violeta
+    secondary = ZadrinthPalette.DarkTextSecondary,
+    onSecondary = ZadrinthPalette.DarkBackground,
+    secondaryContainer = ZadrinthPalette.DarkBrandHighlight,
+    onSecondaryContainer = ZadrinthPalette.DarkOnBrandHighlight,
 
-    error = ModrinthPalette.Red,
+    tertiary = ZadrinthPalette.Pink,
+    onTertiary = ZadrinthPalette.OnGradient,
+    tertiaryContainer = Color(0xFF4A2A5C),
+    onTertiaryContainer = Color(0xFFF5D6FF),
+
+    error = ZadrinthPalette.Red,
     onError = Color(0xFF000000),
     errorContainer = Color(0xFF5A1A2A),
     onErrorContainer = Color(0xFFFFD9E0),
 
-    background = ModrinthPalette.DarkBackground,
-    onBackground = ModrinthPalette.DarkTextPrimary,
-    surface = ModrinthPalette.DarkBackground,
-    onSurface = ModrinthPalette.DarkTextPrimary,
-    surfaceVariant = ModrinthPalette.DarkSurfaceRaised,
-    onSurfaceVariant = ModrinthPalette.DarkTextSecondary,
-    surfaceTint = ModrinthPalette.Brand,
+    background = ZadrinthPalette.DarkBackground,
+    onBackground = ZadrinthPalette.DarkTextPrimary,
+    surface = ZadrinthPalette.DarkBackground,
+    onSurface = ZadrinthPalette.DarkTextPrimary,
+    surfaceVariant = ZadrinthPalette.DarkSurfaceRaised,
+    onSurfaceVariant = ZadrinthPalette.DarkTextSecondary,
+    surfaceTint = ZadrinthPalette.Brand,
 
-    inverseSurface = Color(0xFFE5E7EB),
-    inverseOnSurface = ModrinthPalette.DarkBackground,
+    inverseSurface = Color(0xFFE9E5F2),
+    inverseOnSurface = ZadrinthPalette.DarkBackground,
 
-    outline = Color(0xFF5A606B),
-    outlineVariant = ModrinthPalette.DarkBorder,
+    outline = Color(0xFF6A6380),
+    outlineVariant = ZadrinthPalette.DarkBorder,
     scrim = Color(0xFF000000),
 
-    surfaceDim = Color(0xFF101215),
+    surfaceDim = Color(0xFF0F0D15),
     // O Zalith usa surfaceBright como cor dos cards
-    surfaceBright = ModrinthPalette.DarkSurface,
-    surfaceContainerLowest = Color(0xFF101215),
-    surfaceContainerLow = Color(0xFF1C1F24),
+    surfaceBright = ZadrinthPalette.DarkSurface,
+    surfaceContainerLowest = Color(0xFF0F0D15),
+    surfaceContainerLow = Color(0xFF1B1824),
     // O Zalith usa surfaceContainer como fundo geral do app
-    surfaceContainer = ModrinthPalette.DarkBackground,
-    surfaceContainerHigh = ModrinthPalette.DarkSurface,
-    surfaceContainerHighest = ModrinthPalette.DarkSurfaceRaised,
+    surfaceContainer = ZadrinthPalette.DarkBackground,
+    surfaceContainerHigh = ZadrinthPalette.DarkSurface,
+    surfaceContainerHighest = ZadrinthPalette.DarkSurfaceRaised,
 )
 
-/** Esquema Material3 claro com a paleta do Modrinth */
-val ModrinthLightColorScheme: ColorScheme = lightColorScheme(
-    primary = ModrinthPalette.LightBrand,
-    onPrimary = ModrinthPalette.LightOnBrand,
-    primaryContainer = ModrinthPalette.LightBrandHighlight,
-    onPrimaryContainer = Color(0xFF00522A),
-    inversePrimary = ModrinthPalette.Brand,
+/** Esquema Material3 claro do Zadrinth */
+val ZadrinthLightColorScheme: ColorScheme = lightColorScheme(
+    primary = ZadrinthPalette.LightBrand,
+    onPrimary = ZadrinthPalette.LightOnBrand,
+    primaryContainer = ZadrinthPalette.LightBrandHighlight,
+    onPrimaryContainer = ZadrinthPalette.LightOnBrandHighlight,
+    inversePrimary = ZadrinthPalette.Brand,
 
-    secondary = ModrinthPalette.LightTextSecondary,
-    onSecondary = ModrinthPalette.LightSurface,
-    secondaryContainer = ModrinthPalette.LightBrandHighlight,
-    onSecondaryContainer = Color(0xFF00522A),
+    secondary = ZadrinthPalette.LightTextSecondary,
+    onSecondary = ZadrinthPalette.LightSurface,
+    secondaryContainer = ZadrinthPalette.LightBrandHighlight,
+    onSecondaryContainer = ZadrinthPalette.LightOnBrandHighlight,
 
-    tertiary = Color(0xFF1F6FD1),
+    tertiary = Color(0xFFA03DC8),
     onTertiary = Color(0xFFFFFFFF),
-    tertiaryContainer = Color(0xFFD6E6FF),
-    onTertiaryContainer = Color(0xFF0B2F5C),
+    tertiaryContainer = Color(0xFFF5D6FF),
+    onTertiaryContainer = Color(0xFF4A1A5C),
 
-    error = Color(0xFFCC2A4B),
+    error = Color(0xFFC4264B),
     onError = Color(0xFFFFFFFF),
     errorContainer = Color(0xFFFFD9E0),
     onErrorContainer = Color(0xFF5A1A2A),
 
-    background = ModrinthPalette.LightBackground,
-    onBackground = ModrinthPalette.LightTextPrimary,
-    surface = ModrinthPalette.LightBackground,
-    onSurface = ModrinthPalette.LightTextPrimary,
-    surfaceVariant = ModrinthPalette.LightSurfaceRaised,
-    onSurfaceVariant = ModrinthPalette.LightTextSecondary,
-    surfaceTint = ModrinthPalette.LightBrand,
+    background = ZadrinthPalette.LightBackground,
+    onBackground = ZadrinthPalette.LightTextPrimary,
+    surface = ZadrinthPalette.LightBackground,
+    onSurface = ZadrinthPalette.LightTextPrimary,
+    surfaceVariant = ZadrinthPalette.LightSurfaceRaised,
+    onSurfaceVariant = ZadrinthPalette.LightTextSecondary,
+    surfaceTint = ZadrinthPalette.LightBrand,
 
-    inverseSurface = Color(0xFF26292F),
+    inverseSurface = ZadrinthPalette.DarkSurface,
     inverseOnSurface = Color(0xFFFFFFFF),
 
-    outline = Color(0xFF8A9099),
-    outlineVariant = ModrinthPalette.LightBorder,
+    outline = Color(0xFF8C859E),
+    outlineVariant = ZadrinthPalette.LightBorder,
     scrim = Color(0xFF000000),
 
-    surfaceDim = Color(0xFFDCDFE3),
-    surfaceBright = ModrinthPalette.LightSurface,
+    surfaceDim = Color(0xFFDDD8E8),
+    surfaceBright = ZadrinthPalette.LightSurface,
     surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF5F6F8),
-    surfaceContainer = ModrinthPalette.LightBackground,
-    surfaceContainerHigh = ModrinthPalette.LightSurface,
-    surfaceContainerHighest = ModrinthPalette.LightSurfaceRaised,
+    surfaceContainerLow = Color(0xFFF7F5FB),
+    surfaceContainer = ZadrinthPalette.LightBackground,
+    surfaceContainerHigh = ZadrinthPalette.LightSurface,
+    surfaceContainerHighest = ZadrinthPalette.LightSurfaceRaised,
 )
 
 /**
@@ -188,24 +205,33 @@ data class ModrinthColors(
     val textPrimary: Color,
     val textSecondary: Color,
     val border: Color,
-    val red: Color = ModrinthPalette.Red,
-    val orange: Color = ModrinthPalette.Orange,
-    val blue: Color = ModrinthPalette.Blue,
-    val purple: Color = ModrinthPalette.Purple,
+    /** Fundo das ações principais (degradê no tema Zadrinth, cor sólida nos outros temas) */
+    val brandBrush: Brush,
+    /** Texto/ícone sobre [brandBrush] */
+    val onBrandBrush: Color,
+    val red: Color = ZadrinthPalette.Red,
+    val orange: Color = ZadrinthPalette.Orange,
+    val blue: Color = ZadrinthPalette.Blue,
+    val pink: Color = ZadrinthPalette.Pink,
 )
 
-fun ColorScheme.toModrinthColors(): ModrinthColors = ModrinthColors(
-    background = surfaceContainer,
-    surface = surfaceContainerHigh,
-    surfaceRaised = surfaceContainerHighest,
-    brand = primary,
-    onBrand = onPrimary,
-    brandHighlight = primaryContainer,
-    textPrimary = onSurface,
-    textSecondary = onSurfaceVariant,
-    border = outlineVariant,
-    red = error,
-)
+fun ColorScheme.toModrinthColors(): ModrinthColors {
+    val isZadrinthTheme = primary == ZadrinthPalette.Brand || primary == ZadrinthPalette.LightBrand
+    return ModrinthColors(
+        background = surfaceContainer,
+        surface = surfaceContainerHigh,
+        surfaceRaised = surfaceContainerHighest,
+        brand = primary,
+        onBrand = onPrimary,
+        brandHighlight = primaryContainer,
+        textPrimary = onSurface,
+        textSecondary = onSurfaceVariant,
+        border = outlineVariant,
+        brandBrush = if (isZadrinthTheme) ZadrinthBrandGradient else SolidColor(primary),
+        onBrandBrush = if (isZadrinthTheme) ZadrinthPalette.OnGradient else onPrimary,
+        red = error,
+    )
+}
 
 object ModrinthTheme {
     /** Tokens de cor do tema atual */

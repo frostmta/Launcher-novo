@@ -3073,9 +3073,9 @@
     <!-- Closing line of the guide card about editing actual key bindings in the Key section -->
     <string name="guide_joystick_events_events_text2">If you only want to control the game, just edit the actual key bindings in the \"Key\" section</string>
     <!-- Modrinth-style UI -->
-    <!-- Option of the theme color setting: Modrinth-inspired design system -->
-    <string name="theme_color_modrinth">Modrinth</string>
-    <!-- Green play button label -->
+    <!-- Option of the theme color setting: Zadrinth identity (Modrinth-style layout, blue/violet/pink gradient) -->
+    <string name="theme_color_zadrinth">Zadrinth</string>
+    <!-- Play button label -->
     <string name="modrinth_play">Play</string>
     <!-- Main navigation rail: home -->
     <string name="nav_home">Home</string>
@@ -3119,4 +3119,6 @@
     <string name="library_time_minutes">%1$d min</string>
     <!-- Play time shorter than one minute -->
     <string name="library_time_less_minute">&lt; 1 min</string>
+    <!-- Tag on the main screen required by the Zalith Launcher 2 license (GPLv3 section 7 additional terms) -->
+    <string name="unofficial_modified_version">Unofficial modified version</string>
 </resources>

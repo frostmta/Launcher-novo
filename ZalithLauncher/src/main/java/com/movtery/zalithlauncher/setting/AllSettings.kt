@@ -382,7 +382,7 @@ object AllSettings : SettingsRegistry() {
      */
     val launcherColorTheme = enumSetting(
         "launcherColorTheme",
-        ColorThemeType.MODRINTH
+        ColorThemeType.ZADRINTH
     )
 
     /**
