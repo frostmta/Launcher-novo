@@ -1547,4 +1547,27 @@
     <string name="settings_renderer_sfpew_plugin_layer_title">Camada de compatibilidade SFPEW (plugins de renderização)</string>
     <string name="settings_renderer_sfpew_plugin_layer_summary">Adiciona SimpleFPEWrapper ao renderizador plugins sem suporte a pipeline de função fixa para renderização legado da OpenGL 1.x/2.1</string>
     <string name="generic_retry">Tentar novamente</string>
+    <string name="theme_color_modrinth">Modrinth</string>
+    <string name="modrinth_play">Jogar</string>
+    <string name="nav_home">Início</string>
+    <string name="nav_explore">Explorar</string>
+    <string name="nav_library">Biblioteca</string>
+    <string name="nav_settings">Configurações</string>
+    <string name="nav_accounts">Contas</string>
+    <string name="nav_create_instance">Criar instância</string>
+    <string name="library_title">Biblioteca</string>
+    <string name="library_search_hint">Buscar instâncias…</string>
+    <string name="library_filter_all">Todas</string>
+    <string name="library_filter_vanilla">Vanilla</string>
+    <string name="library_filter_modded">Com mods</string>
+    <string name="library_empty_title">Nenhuma instância ainda</string>
+    <string name="library_empty_message">Crie uma instância ou instale um modpack para começar.</string>
+    <string name="library_no_results">Nenhuma instância corresponde à busca.</string>
+    <string name="library_never_played">Nunca jogado</string>
+    <string name="library_invalid">Corrompida</string>
+    <string name="library_play_instance">Jogar %1$s</string>
+    <string name="library_refresh">Atualizar</string>
+    <string name="library_time_hours_minutes">%1$dh %2$dmin</string>
+    <string name="library_time_minutes">%1$d min</string>
+    <string name="library_time_less_minute">&lt; 1 min</string>
 </resources>

@@ -31,6 +31,8 @@ data class ColorTheme(
 )
 
 enum class ColorThemeType {
+    /** Design System inspirado no Modrinth App (padrão) */
+    MODRINTH,
     DYNAMIC,
     EMBERMIRE,
     VELVET_ROSE,

@@ -45,6 +45,10 @@ sealed interface NormalNavKey : TitledNavKey {
     }
     /** Web屏幕 */
     @Serializable data class WebScreen(val url: String) : NormalNavKey
+    /** Biblioteca de instâncias (estilo Modrinth) */
+    @Serializable data object Library : NormalNavKey {
+        @Contextual override val title: AndroidStringText = androidText(R.string.library_title)
+    }
     /** 版本管理屏幕 */
     @Serializable data object VersionsManager : NormalNavKey {
         @Contextual override val title: AndroidStringText = androidText(R.string.page_title_version_list)

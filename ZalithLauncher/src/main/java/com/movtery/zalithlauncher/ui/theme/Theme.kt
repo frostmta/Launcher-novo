@@ -39,6 +39,9 @@ import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamicColorScheme
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.isLauncherInDarkTheme
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthDarkColorScheme
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthLightColorScheme
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthShapes
 import com.movtery.zalithlauncher.ui.theme.components.activeMaskView
 import com.movtery.zalithlauncher.utils.festival.Festival
 import com.movtery.zalithlauncher.utils.festival.LocalFestivals
@@ -622,6 +625,7 @@ fun ZalithLauncherTheme(
             }
 
             darkTheme -> when (colorTheme) {
+                ColorThemeType.MODRINTH -> ModrinthDarkColorScheme
                 ColorThemeType.EMBERMIRE -> embermireDark
                 ColorThemeType.VELVET_ROSE -> velvetRoseDark
                 ColorThemeType.MISTWAVE -> mistwaveDark
@@ -633,10 +637,11 @@ fun ZalithLauncherTheme(
                     color = customColor,
                     style = customPaletteStyle
                 )
-                else -> embermireDark
+                else -> ModrinthDarkColorScheme
             }
 
             else -> when (colorTheme) {
+                ColorThemeType.MODRINTH -> ModrinthLightColorScheme
                 ColorThemeType.EMBERMIRE -> embermireLight
                 ColorThemeType.VELVET_ROSE -> velvetRoseLight
                 ColorThemeType.MISTWAVE -> mistwaveLight
@@ -648,7 +653,7 @@ fun ZalithLauncherTheme(
                     color = customColor,
                     style = customPaletteStyle
                 )
-                else -> embermireLight
+                else -> ModrinthLightColorScheme
             }
         }
     }
@@ -680,6 +685,7 @@ fun ZalithLauncherTheme(
         MaterialExpressiveTheme(
             colorScheme = currentDisplayScheme,
             motionScheme = MotionScheme.expressive(),
+            shapes = ModrinthShapes,
             typography = AppTypography,
             content = content
         )
