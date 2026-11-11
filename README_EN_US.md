@@ -1,58 +1,89 @@
-# Zalith Launcher 2
-![Downloads](https://img.shields.io/github/downloads/ZalithLauncher/ZalithLauncher2/total)
-[![Sponsor](https://img.shields.io/badge/sponsor-30363D?logo=GitHub-Sponsors)](https://afdian.com/a/MovTery)
+<div align="center">
 
-[简体中文](README.md) | [繁體中文](README_ZH_TW.md)
+<img src="docs/zadrinth-icon.png" alt="Zadrinth Launcher icon" width="128"/>
 
+# Zadrinth Launcher
+
+**A Minecraft: Java Edition launcher for Android, inspired by the Modrinth App.**
+
+![License](https://img.shields.io/badge/license-GPL--3.0-9D7BFF)
+![Android](https://img.shields.io/badge/Android-8.0%2B-6E9BFF)
+![Status](https://img.shields.io/badge/status-in%20development-E07BFF)
+
+[Português](README.md) | English
+
+</div>
 
 > [!IMPORTANT]
-> This project is **completely separate** from [ZalithLauncher](https://github.com/ZalithLauncher/ZalithLauncher).  
+> Zadrinth Launcher is an **independent, unofficial** project. It is **not affiliated** with Modrinth (Rinth, Inc.), the official Zalith Launcher, Mojang or Microsoft. "Modrinth" and "Minecraft" are trademarks of their respective owners.
+>
+> This app is an **unofficial modified version** of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2). Please report issues **in this repository**, not to Zalith.
 
-**Zalith Launcher 2** is a newly designed launcher for **Android devices** tailored for [Minecraft: Java Edition](https://www.minecraft.net/). The project uses [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher/tree/v3_openjdk/app_pojavlauncher/src/main/jni) as its core launching engine and features a modern UI built with **Jetpack Compose** and **Material Design 3**.  
-We are currently building our official website [zalithlauncher.cn](https://zalithlauncher.cn)  
-Additionally, we are aware that a third-party website has been set up using the name “Zalith Launcher”, appearing to be official. Please note: **this site was not created by us**. It exploits the name to display ads for profit. We **do not participate in, endorse, or trust** such content.  
-Please stay vigilant and **protect your personal privacy**!
+## ✨ About
 
-## 🌐 Language and Translation Support
+Zadrinth Launcher brings the look and flow of the **Modrinth App** (desktop) to Android phones, while keeping the game engine from Zalith Launcher 2 / PojavLauncher (LWJGL, renderers, on-screen controls and official Microsoft login).
 
-We are using the Weblate platform to translate Zalith Launcher 2. You're welcome to join our [Weblate project](https://hosted.weblate.org/projects/zalithlauncher2) and contribute to the translations!  
-Thank you to every language contributor for helping make Zalith Launcher 2 more multilingual and global!
+Open the launcher, pick an instance and play, with Modrinth mods, modpacks, resource packs and shaders installed right from the app.
 
-## 📦 Build Instructions (For Developers)
+## 🎨 Look
 
-> The following section is for developers who wish to contribute or build the project locally.
+- Dark theme with a **blue → violet → pink** gradient and purple-tinted backgrounds
+- Fixed side bar: **Home**, **Explore**, **Library**, **Create instance**, **Accounts** and **Settings**
+- Rounded cards with thin borders and a gradient **Play** button
 
-### Requirements
+## 🗺️ Roadmap
 
-* Android Studio **Bumblebee** or newer
-* Android SDK:
-  * **Minimum API level**: 26
-  * **Target API level**: 35
-* JDK 11
+| Stage | What it adds | Status |
+|---|---|---|
+| 1 | Design system, side bar and **Library** screen | ✅ Done ([PR #1](https://github.com/frostmta/Launcher-novo/pull/1)) |
+| 2 | **Isolated instances** (`mods/`, `config/`, `saves/`... + `instance.json`) and an instance page with Content, Worlds, Logs and Settings tabs | 🔜 |
+| 3 | **Explore** screen using the Modrinth API (Labrinth v2): search and filters by version, loader and category | 🔜 |
+| 4 | Install into any instance, with **required dependencies** downloaded automatically | 🔜 |
+| 5 | Full **`.mrpack`** support (SHA-1/SHA-512 hashes and `overrides/`) | 🔜 |
 
-### Build Steps
+## 📥 Download
+
+There is no stable release yet. Test APKs are built automatically in the [Actions](https://github.com/frostmta/Launcher-novo/actions) tab (open the latest run and download the `debug apk` artifact; **arm64** fits most phones).
+
+Stable versions will be published under [Releases](https://github.com/frostmta/Launcher-novo/releases).
+
+## 🛠️ Building
+
+The easiest way is GitHub Actions: every push builds the debug APKs.
+
+To build locally you need:
+
+- JDK 21
+- Android SDK (API 37) and NDK 27
+- Rust with the Android targets and [`cargo-ndk`](https://github.com/bbqsrc/cargo-ndk)
 
 ```bash
-git clone git@github.com:ZalithLauncher/ZalithLauncher2.git
-# Open the project in Android Studio and build
+git clone https://github.com/frostmta/Launcher-novo.git
+cd Launcher-novo
+./gradlew ZalithLauncher:assembleDebug -Darch=arm64
 ```
+
+Optional keys (environment variables or GitHub secrets): `OAUTH_CLIENT_ID` (Microsoft login) and `CURSEFORGE_API_KEY` (CurseForge downloads).
 
 ## 📜 License
 
-This project is licensed under the **[GPL-3.0 license](LICENSE)**.
+This project is released under the **[GPL-3.0](LICENSE)**, the same license as Zalith Launcher 2.
 
-### Additional Terms (Pursuant to Section 7 of the GPLv3 License)
+It follows Zalith Launcher 2's additional terms (GPLv3, section 7):
 
-1. When distributing a modified version of this program, you must reasonably modify the program's name or version number to distinguish it from the original version. (According to [GPLv3, 7(c)](https://github.com/ZalithLauncher/ZalithLauncher2/blob/969827b/LICENSE#L372-L374))
-    - Modified versions **must not include the original program name "ZalithLauncher" or its abbreviation "ZL" in their name, nor use any name that is similar enough to cause confusion with the official name**.
-    - All modified versions **must clearly indicate that they are “Unofficial Modified Versions” on the program’s startup screen or main interface**.
-    - The application name of the program can be modified in [gradle.properties](./ZalithLauncher/gradle.properties).
+- the program name was changed to tell it apart from the original;
+- the app shows it is an **unofficial modified version** on its main screen;
+- the copyright notices shown by the program were kept.
 
-2. You must not remove the copyright notices displayed by the program. (According to [GPLv3, 7(b)](https://github.com/ZalithLauncher/ZalithLauncher2/blob/969827b/LICENSE#L368-L370))
+## 🙏 Credits
 
-## Open Source Libraries and Licenses
+- **[Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2)** by MovTery and contributors: the base of this whole project
+- **[PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher)**: the game engine used by Zalith
+- **[Modrinth](https://modrinth.com)**: inspiration for the app's look and flow, and the public API used to browse content
 
-This software uses the following open source libraries:
+### Open-source libraries
+
+This software uses the following open-source libraries (list inherited from Zalith Launcher 2):
 
 | Library                               | Copyright                                                                                                     | License              | Official Link                                                                      |
 |---------------------------------------|---------------------------------------------------------------------------------------------------------------|----------------------|------------------------------------------------------------------------------------|
