@@ -18,19 +18,6 @@
 
 package com.movtery.zalithlauncher.ui.screens.main
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.drawWithContent
-import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.unit.Dp
-import com.movtery.zalithlauncher.ui.screens.content.LibraryScreen
-import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthDimens
-import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTag
-import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTheme
 import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
@@ -40,6 +27,9 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -56,16 +46,15 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -74,21 +63,25 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.entryProvider
+import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.BuildKeys
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.coroutine.TaskSystem
+import com.movtery.zalithlauncher.game.account.AccountsManager
+import com.movtery.zalithlauncher.game.instance.InstanceStatsStore
+import com.movtery.zalithlauncher.game.instance.sortedByRecent
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.path.PathManager
@@ -97,8 +90,6 @@ import com.movtery.zalithlauncher.ui.AndroidStringText
 import com.movtery.zalithlauncher.ui.androidText
 import com.movtery.zalithlauncher.ui.components.BackgroundCard
 import com.movtery.zalithlauncher.ui.components.CardTitleLayout
-import com.movtery.zalithlauncher.ui.components.TextRailItem
-import com.movtery.zalithlauncher.ui.guide.sendStartGuideOnce
 import com.movtery.zalithlauncher.ui.screens.BackStackNavKey
 import com.movtery.zalithlauncher.ui.screens.NavStateHost
 import com.movtery.zalithlauncher.ui.screens.NestedNavDisplay
@@ -108,7 +99,7 @@ import com.movtery.zalithlauncher.ui.screens.TitledNavKey
 import com.movtery.zalithlauncher.ui.screens.content.AccountManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.DownloadScreen
 import com.movtery.zalithlauncher.ui.screens.content.FileSelectorScreen
-import com.movtery.zalithlauncher.ui.screens.content.LauncherScreen
+import com.movtery.zalithlauncher.ui.screens.content.LibraryScreen
 import com.movtery.zalithlauncher.ui.screens.content.LicenseScreen
 import com.movtery.zalithlauncher.ui.screens.content.LogViewScreen
 import com.movtery.zalithlauncher.ui.screens.content.MultiplayerScreen
@@ -118,16 +109,17 @@ import com.movtery.zalithlauncher.ui.screens.content.VersionSettingsScreen
 import com.movtery.zalithlauncher.ui.screens.content.VersionsManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.WebViewScreen
 import com.movtery.zalithlauncher.ui.screens.content.addoninfo.AddonInfoScreen
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.ZadrinthHomeScreen
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.ZadrinthInstanceScreen
 import com.movtery.zalithlauncher.ui.screens.navigateTo
 import com.movtery.zalithlauncher.ui.screens.onBack
 import com.movtery.zalithlauncher.ui.screens.rememberTransitionSpec
 import com.movtery.zalithlauncher.ui.theme.backgroundColor
 import com.movtery.zalithlauncher.ui.theme.cardColor
-import com.movtery.zalithlauncher.ui.theme.festivals.FestivalTitleText
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTheme
 import com.movtery.zalithlauncher.ui.theme.onBackgroundColor
 import com.movtery.zalithlauncher.ui.theme.onCardColor
 import com.movtery.zalithlauncher.utils.animation.getAnimateTween
-import com.movtery.zalithlauncher.utils.festival.LocalFestivals
 import com.movtery.zalithlauncher.utils.file.formatFileSize
 import com.movtery.zalithlauncher.viewmodel.ErrorViewModel
 import com.movtery.zalithlauncher.viewmodel.EventViewModel
@@ -136,7 +128,86 @@ import com.movtery.zalithlauncher.viewmodel.ModifyVersionViewModel
 import com.movtery.zalithlauncher.viewmodel.ModpackImportViewModel
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import com.movtery.zalithlauncher.viewmodel.sendKeepScreen
-import com.movtery.zalithlauncher.viewmodel.sendToast
+import java.io.File
+
+/** Faixa superior com degradê, como a barra de título do SKlauncher */
+private val TitleBarBrush = Brush.horizontalGradient(
+    listOf(
+        Color(0xFF15162B),
+        Color(0xFF2B3B8A),
+        Color(0xFF47389C),
+        Color(0xFF1C1631)
+    )
+)
+
+/**
+ * Ações de navegação compartilhadas entre a barra lateral e as telas.
+ */
+private class MainNavigator(
+    private val model: ScreenBackStackViewModel,
+) {
+    /** Volta ao Início */
+    fun toHome() {
+        model.mainScreen.clearWith(NormalNavKey.LauncherMain)
+    }
+
+    /** Destino principal: a pilha vira [Início, destino] */
+    fun topLevel(key: TitledNavKey) {
+        val main = model.mainScreen
+        main.clearWith(NormalNavKey.LauncherMain)
+        if (key !is NormalNavKey.LauncherMain) {
+            main.navigateTo(key, useClassEquality = key !is NormalNavKey.Instance)
+        }
+    }
+
+    /** Abre a tela de download na aba indicada */
+    fun downloadTab(tab: TitledNavKey) {
+        model.downloadScreen.clearWith(tab)
+        topLevel(model.downloadScreen)
+    }
+
+    fun createInstance() = downloadTab(model.downloadGameScreen)
+
+    fun exploreContent() = downloadTab(model.downloadModScreen)
+
+    fun exploreWorlds() = downloadTab(model.downloadSavesScreen)
+
+    /** Abre a página de uma instância por cima da tela atual */
+    fun openInstance(version: Version) {
+        model.mainScreen.navigateTo(NormalNavKey.Instance(version.getVersionName()))
+    }
+
+    /** Abre a página de uma instância a partir da barra lateral */
+    fun openInstanceTopLevel(version: Version) {
+        topLevel(NormalNavKey.Instance(version.getVersionName()))
+    }
+
+    /** Gerenciamento avançado da versão (telas do Zalith) */
+    fun openAdvanced(version: Version) {
+        model.mainScreen.navigateTo(
+            screenKey = NestedNavKey.VersionSettings(version),
+            useClassEquality = true
+        )
+    }
+
+    /** Configurações da instância (RAM, renderizador, argumentos JVM...) */
+    fun openInstanceSettings(version: Version) {
+        model.mainScreen.navigateTo(
+            screenKey = NestedNavKey.VersionSettings(version).apply {
+                navigateTo(NormalNavKey.Versions.Config)
+            },
+            useClassEquality = true
+        )
+    }
+
+    fun openExport(version: Version) {
+        model.mainScreen.removeAndNavigateTo(
+            remove = NestedNavKey.VersionSettings::class,
+            screenKey = NestedNavKey.VersionExport(version),
+            useClassEquality = true
+        )
+    }
+}
 
 @Composable
 fun MainScreen(
@@ -147,12 +218,12 @@ fun MainScreen(
     submitError: (ErrorViewModel.ThrowableMessage) -> Unit
 ) {
     //监控当前是否有任务正在进行
-    var taskRunning by remember { mutableStateOf(true) }
+    var noTasks by remember { mutableStateOf(true) }
     LaunchedEffect(Unit) {
         TaskSystem.tasksFlow.collect { tasks ->
-            val noTasks = tasks.isEmpty()
-            eventViewModel.sendKeepScreen(!noTasks)
-            taskRunning = noTasks
+            val empty = tasks.isEmpty()
+            eventViewModel.sendKeepScreen(!empty)
+            noTasks = empty
         }
     }
 
@@ -162,144 +233,142 @@ fun MainScreen(
         AllSettings.launcherTaskMenuExpanded.save(!isTaskMenuExpanded)
     }
 
-    /** 回到主页面通用函数 */
-    val toMainScreen: () -> Unit = {
-        screenBackStackModel.mainScreen.clearWith(NormalNavKey.LauncherMain)
-    }
+    val navigator = remember(screenBackStackModel) { MainNavigator(screenBackStackModel) }
 
     val mainScreenKey = screenBackStackModel.mainScreen.currentKey
     val inLauncherScreen = mainScreenKey == null || mainScreenKey is NormalNavKey.LauncherMain
 
+    //Dados para a barra lateral (conta e instâncias recentes)
+    val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
+    val versions by VersionsManager.versions.collectAsStateWithLifecycle()
+    val stats by InstanceStatsStore.stats.collectAsStateWithLifecycle()
+    LaunchedEffect(versions) {
+        InstanceStatsStore.refresh(versions)
+    }
+    val recentInstances = remember(versions, stats) {
+        versions.filter { it.isValid() }.sortedByRecent(stats).take(4)
+    }
+
     val isBackgroundValid = LocalBackgroundViewModel.current?.isValid == true
     val launcherBackgroundOpacity = AllSettings.launcherBackgroundOpacity.state.toFloat() / 100f
 
-    val modrinthColors = ModrinthTheme.colors
-    //Barra lateral + barra superior usam a cor de superfície; o conteúdo usa o fundo principal
-    val chromeColor = if (isBackgroundValid) {
-        modrinthColors.surface.copy(alpha = launcherBackgroundOpacity)
-    } else modrinthColors.surface
-    val backgroundColor = if (isBackgroundValid) {
+    val colors = ModrinthTheme.colors
+    val shellColor = if (isBackgroundValid) {
+        colors.shell.copy(alpha = launcherBackgroundOpacity)
+    } else colors.shell
+    val panelColor = if (isBackgroundValid) {
         backgroundColor().copy(alpha = launcherBackgroundOpacity)
     } else backgroundColor()
 
-    /** Navega para um destino principal: a pilha vira [Início, destino] */
-    val navigateTopLevel: (TitledNavKey) -> Unit = { key ->
-        val main = screenBackStackModel.mainScreen
-        main.clearWith(NormalNavKey.LauncherMain)
-        if (key !is NormalNavKey.LauncherMain) {
-            main.navigateTo(key, useClassEquality = true)
-        }
-    }
-
-    /** Abre a tela de download/criação de instância na aba indicada */
-    val navigateToDownloadTab: (TitledNavKey) -> Unit = { tab ->
-        screenBackStackModel.downloadScreen.clearWith(tab)
-        navigateTopLevel(screenBackStackModel.downloadScreen)
-    }
+    //As telas novas do Zadrinth têm o próprio cabeçalho; as herdadas do Zalith usam a linha "Voltar"
+    val showContentHeader = !inLauncherScreen &&
+            mainScreenKey !is NormalNavKey.Library &&
+            mainScreenKey !is NormalNavKey.Instance
 
     Surface(
         modifier = Modifier.fillMaxSize(),
-        color = chromeColor,
+        color = shellColor,
         contentColor = onBackgroundColor()
     ) {
-        Row(modifier = Modifier.fillMaxSize()) {
-            ModrinthNavRail(
-                modifier = Modifier.fillMaxHeight(),
-                selected = mainScreenKey.toMainNavDestination(),
-                accountsSelected = mainScreenKey is NormalNavKey.AccountManager,
-                onNavigate = { destination ->
-                    when (destination) {
-                        MainNavDestination.HOME -> {
-                            if (!inLauncherScreen) toMainScreen()
-                        }
-                        MainNavDestination.EXPLORE -> {
-                            if (mainScreenKey !is NestedNavKey.Download) {
-                                navigateToDownloadTab(screenBackStackModel.downloadModPackScreen)
-                            }
-                        }
-                        MainNavDestination.LIBRARY -> {
-                            if (mainScreenKey !is NormalNavKey.Library) {
-                                navigateTopLevel(NormalNavKey.Library)
-                            }
-                        }
-                        MainNavDestination.SETTINGS -> {
-                            if (mainScreenKey !is NestedNavKey.Settings) {
-                                navigateTopLevel(screenBackStackModel.settingsScreen)
-                            }
-                        }
-                    }
-                },
-                onCreateInstance = {
-                    navigateToDownloadTab(screenBackStackModel.downloadGameScreen)
-                },
-                onOpenAccounts = {
-                    if (mainScreenKey !is NormalNavKey.AccountManager) {
-                        navigateTopLevel(NormalNavKey.AccountManager())
-                    }
+        Column(modifier = Modifier.fillMaxSize()) {
+            ZadrinthTitleBar(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(36.dp),
+                showTasks = !(isTaskMenuExpanded || noTasks),
+                onToggleTasks = { changeTasksExpandedState() },
+                onOpenFiles = {
+                    eventViewModel.sendEvent(
+                        EventViewModel.Event.OpenFileManager(
+                            rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
+                        )
+                    )
                 }
             )
 
-            Column(
+            Row(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .weight(1f)
+                    .fillMaxSize()
+                    .padding(start = 8.dp, end = 8.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                TopBar(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(44.dp),
-                    mainScreenKey = mainScreenKey,
-                    inLauncherScreen = inLauncherScreen,
-                    taskRunning = taskRunning,
-                    isTasksExpanded = isTaskMenuExpanded,
-                    contentColor = onBackgroundColor(),
-                    onScreenBack = {
-                        screenBackStackModel.mainScreen.backStack.removeFirstOrNull()
+                ZadrinthSidebar(
+                    account = account,
+                    accountsSelected = mainScreenKey is NormalNavKey.AccountManager,
+                    selected = mainScreenKey.toMainNavDestination(),
+                    recentInstances = recentInstances,
+                    selectedInstanceName = (mainScreenKey as? NormalNavKey.Instance)?.versionName,
+                    onNavigate = { destination ->
+                        when (destination) {
+                            MainNavDestination.HOME -> {
+                                if (!inLauncherScreen) navigator.toHome()
+                            }
+                            MainNavDestination.LIBRARY -> {
+                                if (mainScreenKey !is NormalNavKey.Library) {
+                                    navigator.topLevel(NormalNavKey.Library)
+                                }
+                            }
+                            MainNavDestination.EXPLORE -> {
+                                if (mainScreenKey !is NestedNavKey.Download) {
+                                    navigator.downloadTab(screenBackStackModel.downloadModPackScreen)
+                                }
+                            }
+                            MainNavDestination.MULTIPLAYER -> {
+                                if (mainScreenKey !is NormalNavKey.Multiplayer) {
+                                    navigator.topLevel(NormalNavKey.Multiplayer)
+                                }
+                            }
+                            MainNavDestination.SETTINGS -> {
+                                if (mainScreenKey !is NestedNavKey.Settings) {
+                                    navigator.topLevel(screenBackStackModel.settingsScreen)
+                                }
+                            }
+                        }
                     },
-                    toMultiplayerScreen = {
-                        screenBackStackModel.mainScreen.removeAndNavigateTo(
-                            removes = screenBackStackModel.clearBeforeNavKeys,
-                            screenKey = NormalNavKey.Multiplayer
-                        )
+                    onCreateInstance = { navigator.createInstance() },
+                    onOpenAccounts = {
+                        if (mainScreenKey !is NormalNavKey.AccountManager) {
+                            navigator.topLevel(NormalNavKey.AccountManager())
+                        }
                     },
-                    openFileManager = {
-                        eventViewModel.sendEvent(
-                            EventViewModel.Event.OpenFileManager(
-                                rootPath = PathManager.DIR_FILES_EXTERNAL.absolutePath
-                            )
-                        )
-                    },
-                    changeExpandedState = {
-                        changeTasksExpandedState()
-                    },
+                    onOpenInstance = { version -> navigator.openInstanceTopLevel(version) }
                 )
 
-                //Painel de conteúdo com canto superior arredondado, como no Modrinth App
+                //Painel de conteúdo flutuante
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
                         .weight(1f)
-                        .clip(RoundedCornerShape(topStart = ModrinthDimens.CardRadius))
-                        .background(backgroundColor)
-                        .topStartPanelBorder(
-                            color = modrinthColors.border,
-                            radius = ModrinthDimens.CardRadius,
-                            width = ModrinthDimens.BorderWidth
-                        )
+                        .fillMaxHeight()
+                        .clip(ZadrinthPanelShape)
+                        .background(panelColor)
+                        .border(1.dp, colors.border, ZadrinthPanelShape)
                 ) {
-                    NavStateHost(rootKey = screenBackStackModel.mainScreen) {
-                        NavigationUI(
-                            modifier = Modifier.fillMaxSize(),
-                            screenBackStackModel = screenBackStackModel,
-                            toMainScreen = toMainScreen,
-                            eventViewModel = eventViewModel,
-                            modpackImportViewModel = modpackImportViewModel,
-                            modifyVersionViewModel = modifyVersionViewModel,
-                            submitError = submitError,
-                            navigateToCreateInstance = {
-                                navigateToDownloadTab(screenBackStackModel.downloadGameScreen)
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        AnimatedVisibility(visible = showContentHeader) {
+                            ContentHeader(
+                                mainScreenKey = mainScreenKey,
+                                onBack = {
+                                    screenBackStackModel.mainScreen.backStack.removeLastOrNull()
+                                }
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                        ) {
+                            NavStateHost(rootKey = screenBackStackModel.mainScreen) {
+                                NavigationUI(
+                                    modifier = Modifier.fillMaxSize(),
+                                    screenBackStackModel = screenBackStackModel,
+                                    navigator = navigator,
+                                    eventViewModel = eventViewModel,
+                                    modpackImportViewModel = modpackImportViewModel,
+                                    modifyVersionViewModel = modifyVersionViewModel,
+                                    submitError = submitError
+                                )
                             }
-                        )
+                        }
                     }
 
                     TaskMenu(
@@ -319,261 +388,175 @@ fun MainScreen(
 }
 
 /**
- * Borda fina só no topo e na lateral inicial do painel de conteúdo,
- * contornando o canto arredondado (as outras bordas encostam na tela).
+ * Faixa superior: nome do launcher no centro (com o aviso de versão não oficial,
+ * exigido pela licença do Zalith Launcher 2) e atalhos à direita.
  */
-private fun Modifier.topStartPanelBorder(
-    color: Color,
-    radius: Dp,
-    width: Dp
-): Modifier = drawWithContent {
-    drawContent()
-    val stroke = width.toPx()
-    val half = stroke / 2f
-    val r = radius.toPx()
-    val path = Path().apply {
-        moveTo(half, size.height)
-        lineTo(half, r)
-        arcTo(
-            rect = Rect(left = half, top = half, right = 2f * r - half, bottom = 2f * r - half),
-            startAngleDegrees = 180f,
-            sweepAngleDegrees = 90f,
-            forceMoveTo = false
-        )
-        lineTo(size.width, half)
-    }
-    if (layoutDirection == LayoutDirection.Rtl) {
-        scale(scaleX = -1f, scaleY = 1f) {
-            drawPath(path = path, color = color, style = Stroke(width = stroke))
+@Composable
+private fun ZadrinthTitleBar(
+    showTasks: Boolean,
+    onToggleTasks: () -> Unit,
+    onOpenFiles: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val onBar = Color.White
+    Box(modifier = modifier.background(TitleBarBrush)) {
+        Row(
+            modifier = Modifier.align(Alignment.Center),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Image(
+                modifier = Modifier.size(20.dp),
+                painter = painterResource(R.drawable.img_launcher),
+                contentDescription = null
+            )
+            Text(
+                text = "${BuildKeys.LAUNCHER_NAME} ${BuildConfig.VERSION_NAME}",
+                style = MaterialTheme.typography.titleSmall,
+                color = onBar,
+                maxLines = 1
+            )
+            //Exigido pelos termos adicionais da licença do Zalith Launcher 2 (GPLv3, seção 7)
+            Text(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(onBar.copy(alpha = 0.16f))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                text = stringResource(R.string.unofficial_modified_version),
+                style = MaterialTheme.typography.labelSmall,
+                color = onBar,
+                maxLines = 1
+            )
         }
-    } else {
-        drawPath(path = path, color = color, style = Stroke(width = stroke))
+
+        Row(
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AnimatedVisibility(
+                visible = showTasks,
+                enter = slideInVertically(initialOffsetY = { -50 }) + fadeIn(),
+                exit = slideOutVertically(targetOffsetY = { -50 }) + fadeOut()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable(role = Role.Button, onClick = onToggleTasks)
+                        .padding(horizontal = 8.dp, vertical = 6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LinearProgressIndicator(
+                        modifier = Modifier.width(72.dp),
+                        color = onBar,
+                        trackColor = onBar.copy(alpha = 0.25f)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        modifier = Modifier.size(18.dp),
+                        painter = painterResource(R.drawable.ic_assignment_filled),
+                        contentDescription = stringResource(R.string.main_task_menu),
+                        tint = onBar
+                    )
+                }
+            }
+            IconButton(onClick = onOpenFiles) {
+                Icon(
+                    modifier = Modifier.size(18.dp),
+                    painter = painterResource(R.drawable.ic_folder_outlined),
+                    contentDescription = stringResource(R.string.nav_files),
+                    tint = onBar
+                )
+            }
+        }
     }
 }
 
+/**
+ * Linha "← Voltar · Título" mostrada nas telas herdadas do Zalith.
+ */
 @Composable
-private fun <E: TitledNavKey> TopBar(
-    mainScreenKey: E?,
-    inLauncherScreen: Boolean,
-    taskRunning: Boolean,
-    isTasksExpanded: Boolean,
-    modifier: Modifier = Modifier,
-    contentColor: Color,
-    onScreenBack: () -> Unit,
-    toMultiplayerScreen: () -> Unit,
-    openFileManager: () -> Unit,
-    changeExpandedState: () -> Unit,
+private fun ContentHeader(
+    mainScreenKey: TitledNavKey?,
+    onBack: () -> Unit,
 ) {
-    val festivals = LocalFestivals.current
+    val colors = ModrinthTheme.colors
+    val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
 
-    val inMultiplayerScreen = mainScreenKey is NormalNavKey.Multiplayer
+    val parentRes = mainScreenKey?.title
+    val childRes = (mainScreenKey as? BackStackNavKey<*>)?.currentKey?.title
 
-    CompositionLocalProvider(
-        LocalContentColor provides contentColor
-    ) {
-        ConstraintLayout(modifier = modifier) {
-            val (backCenter, title, endButtons) = createRefs()
-
-            val backDispatcher = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
-
+    Column {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(44.dp)
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
             Row(
                 modifier = Modifier
-                    .constrainAs(backCenter) {
-                        start.linkTo(parent.start)
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable(role = Role.Button) {
+                        backDispatcher?.onBackPressed() ?: onBack()
                     }
-                    .fillMaxHeight()
+                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                AnimatedVisibility(
-                    visible = !inLauncherScreen
-                ) {
-                    Row(modifier = Modifier.fillMaxHeight()) {
-                        Spacer(Modifier.width(12.dp))
-
-                        IconButton(
-                            modifier = Modifier.fillMaxHeight(),
-                            onClick = {
-                                if (!inLauncherScreen) {
-                                    //不在主屏幕时才允许返回
-                                    backDispatcher?.onBackPressed() ?: run {
-                                        onScreenBack()
-                                    }
-                                }
-                            }
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(24.dp),
-                                painter = painterResource(R.drawable.ic_arrow_back),
-                                contentDescription = stringResource(R.string.generic_back)
-                            )
-                        }
-
-                    }
-                }
+                Icon(
+                    modifier = Modifier.size(18.dp),
+                    painter = painterResource(R.drawable.ic_arrow_back),
+                    contentDescription = null,
+                    tint = colors.textSecondary
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = stringResource(R.string.generic_back),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colors.textSecondary
+                )
             }
-            val parentRes = mainScreenKey?.title
-            val childRes = (mainScreenKey as? BackStackNavKey<*>)?.currentKey?.title
 
             Crossfade(
-                modifier = Modifier.constrainAs(title) {
-                    centerVerticallyTo(parent)
-                    start.linkTo(backCenter.end, margin = 16.dp)
-                },
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
                 targetState = parentRes to childRes
             ) { (parent, child) ->
-                val style = MaterialTheme.typography.titleMedium
-                val softWarp = false
-                val maxLines = 1
-
-                if (parent == null) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Image(
-                            modifier = Modifier.size(22.dp),
-                            painter = painterResource(R.drawable.img_launcher),
-                            contentDescription = null
-                        )
-                        if (festivals.isEmpty()) {
-                            Text(
-                                text = BuildKeys.LAUNCHER_NAME,
-                                style = style,
-                                softWrap = softWarp,
-                                maxLines = maxLines
-                            )
-                        } else {
-                            FestivalTitleText(
-                                festivals = festivals,
-                                style = style,
-                                maxLines = maxLines
-                            )
-                        }
-                        //Exigido pelos termos adicionais da licença do Zalith Launcher 2 (GPLv3, seção 7)
-                        ModrinthTag(text = stringResource(R.string.unofficial_modified_version))
-                    }
-                } else {
+                if (parent != null) {
                     val titleText = if (child != null) {
-                        androidText(parent, androidText(" - "), child)
+                        androidText(parent, androidText(" · "), child)
                     } else {
                         parent
                     }
-
                     AndroidStringText(
                         text = titleText,
-                        style = style,
-                        softWrap = softWarp,
-                        maxLines = maxLines
+                        style = MaterialTheme.typography.titleSmall.copy(color = colors.textPrimary),
+                        softWrap = false,
+                        maxLines = 1
                     )
                 }
-            }
-
-            Row(
-                modifier = Modifier
-                    .constrainAs(endButtons) {
-                        top.linkTo(parent.top)
-                        bottom.linkTo(parent.bottom)
-                        end.linkTo(parent.end, margin = 12.dp)
-                    },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                AnimatedVisibility(
-                    visible = !(isTasksExpanded || taskRunning),
-                    enter = slideInVertically(
-                        initialOffsetY = { -50 }
-                    ) + fadeIn(),
-                    exit = slideOutVertically(
-                        targetOffsetY = { -50 }
-                    ) + fadeOut()
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .clip(shape = MaterialTheme.shapes.large)
-                            .clickable { changeExpandedState() }
-                            .padding(all = 8.dp)
-                            .width(120.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        LinearProgressIndicator(modifier = Modifier.weight(1f))
-                        Icon(
-                            modifier = Modifier.size(22.dp),
-                            painter = painterResource(R.drawable.ic_assignment_filled),
-                            contentDescription = stringResource(R.string.main_task_menu)
-                        )
-                    }
-                }
-
-                IconButton(
-                    onClick = openFileManager
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_folder_filled),
-                        contentDescription = null
-                    )
-                }
-
-                TopBarRailItem(
-                    selected = inMultiplayerScreen,
-                    painter = painterResource(R.drawable.ic_group_filled),
-                    text = stringResource(R.string.terracotta),
-                    onClick = {
-                        if (!inMultiplayerScreen) toMultiplayerScreen()
-                    },
-                )
-
             }
         }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(1.dp)
+                .background(colors.border)
+        )
     }
-}
-
-@Composable
-private fun TopBarRailItem(
-    selected: Boolean,
-    painter: Painter,
-    text: String,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {},
-    textStyle: TextStyle = MaterialTheme.typography.labelMedium
-) {
-    TextRailItem(
-        modifier = modifier,
-        onClick = onClick,
-        text = {
-            AnimatedVisibility(visible = selected) {
-                Row {
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = text,
-                        style = textStyle
-                    )
-                }
-            }
-        },
-        icon = {
-            Icon(
-                painter = painter,
-                contentDescription = text
-            )
-        },
-        selected = selected,
-        selectedPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
-        unSelectedPadding = PaddingValues(all = 8.dp),
-    )
 }
 
 @Composable
 private fun NavigationUI(
     modifier: Modifier = Modifier,
     screenBackStackModel: ScreenBackStackViewModel,
-    toMainScreen: () -> Unit,
+    navigator: MainNavigator,
     eventViewModel: EventViewModel,
     modpackImportViewModel: ModpackImportViewModel,
     modifyVersionViewModel: ModifyVersionViewModel,
     submitError: (ErrorViewModel.ThrowableMessage) -> Unit,
-    navigateToCreateInstance: () -> Unit,
 ) {
     val backStack = screenBackStackModel.mainScreen.backStack
     val currentKey = backStack.lastOrNull()
@@ -583,20 +566,16 @@ private fun NavigationUI(
     }
 
     if (backStack.isNotEmpty()) {
-        /** 导航至版本详细信息屏幕 */
-        val navigateToVersions: (Version) -> Unit = { version ->
-            screenBackStackModel.mainScreen.navigateTo(
-                screenKey = NestedNavKey.VersionSettings(version),
-                useClassEquality = true
-            )
+        val toMainScreen: () -> Unit = { navigator.toHome() }
+        val navigateToVersions: (Version) -> Unit = { version -> navigator.openAdvanced(version) }
+        val navigateToExport: (Version) -> Unit = { version -> navigator.openExport(version) }
+        /** Joga uma instância; ela passa a ser a selecionada (aparece no Início) */
+        val playInstance: (Version) -> Unit = { version ->
+            VersionsManager.saveVersion(version)
+            eventViewModel.sendEvent(EventViewModel.Event.Launch.Game(version))
         }
-        /** 导航至整合包导出屏幕 */
-        val navigateToExport: (Version) -> Unit = { version ->
-            screenBackStackModel.mainScreen.removeAndNavigateTo(
-                remove = NestedNavKey.VersionSettings::class,
-                screenKey = NestedNavKey.VersionExport(version),
-                useClassEquality = true
-            )
+        val openLink: (String) -> Unit = { url ->
+            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
         }
 
         NestedNavDisplay(
@@ -610,47 +589,44 @@ private fun NavigationUI(
             popTransitionSpec = rememberTransitionSpec(),
             entryProvider = entryProvider {
                 entry<NormalNavKey.LauncherMain> {
-                    LauncherScreen(
+                    ZadrinthHomeScreen(
                         backStackViewModel = screenBackStackModel,
-                        navigateToVersions = navigateToVersions,
-                        onLaunchGame = { version ->
-                            eventViewModel.sendEvent(
-                                EventViewModel.Event.Launch.Game(version)
-                            )
-                        },
-                        onQuickPlayServer = { version, address ->
-                            val target = (version ?: VersionsManager.currentVersion.value)?.takeIf { it.isValid() }
-                            if (target != null) {
-                                eventViewModel.sendEvent(
-                                    EventViewModel.Event.Launch.PlayServer(target, address)
-                                )
-                            } else {
-                                eventViewModel.sendToast(androidText(R.string.game_launch_no_version))
-                                screenBackStackModel.mainScreen.navigateTo(NormalNavKey.VersionsManager)
-                            }
-                        },
-                        onOpenLink = {
-                            eventViewModel.sendEvent(EventViewModel.Event.OpenLink(it))
-                        },
-                        startGuideOnce = { keys ->
-                            eventViewModel.sendStartGuideOnce(keys)
-                        }
+                        onPlayInstance = playInstance,
+                        onOpenInstance = { version -> navigator.openInstance(version) },
+                        onOpenLibrary = { navigator.topLevel(NormalNavKey.Library) },
+                        onCreateInstance = { navigator.createInstance() },
+                        onOpenLink = openLink
                     )
                 }
                 entry<NormalNavKey.Library> {
                     LibraryScreen(
                         backStackViewModel = screenBackStackModel,
-                        onOpenInstance = navigateToVersions,
-                        onPlayInstance = { version ->
-                            //A instância jogada passa a ser a atual (aparece no Início)
-                            VersionsManager.saveVersion(version)
-                            eventViewModel.sendEvent(
-                                EventViewModel.Event.Launch.Game(version)
-                            )
-                        },
-                        onCreateInstance = navigateToCreateInstance,
+                        onOpenInstance = { version -> navigator.openInstance(version) },
+                        onPlayInstance = playInstance,
+                        onCreateInstance = { navigator.createInstance() },
                         onManageInvalid = {
                             screenBackStackModel.mainScreen.navigateTo(NormalNavKey.VersionsManager)
+                        }
+                    )
+                }
+                entry<NormalNavKey.Instance> { key ->
+                    ZadrinthInstanceScreen(
+                        key = key,
+                        backStackViewModel = screenBackStackModel,
+                        onBack = { onBack(backStack) },
+                        onPlay = playInstance,
+                        onOpenSettings = { version -> navigator.openInstanceSettings(version) },
+                        onOpenAdvanced = navigateToVersions,
+                        onExport = navigateToExport,
+                        onBrowseContent = { navigator.exploreContent() },
+                        onBrowseWorlds = { navigator.exploreWorlds() },
+                        onOpenFolder = { root: File, current: File ->
+                            eventViewModel.sendEvent(
+                                EventViewModel.Event.OpenFileManager(
+                                    rootPath = root.absolutePath,
+                                    currentPath = current.absolutePath
+                                )
+                            )
                         }
                     )
                 }

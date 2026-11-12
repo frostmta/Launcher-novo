@@ -23,16 +23,19 @@ import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -47,97 +51,133 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.movtery.zalithlauncher.R
+import com.movtery.zalithlauncher.game.account.Account
+import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.ui.screens.NestedNavKey
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.TitledNavKey
-import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthCardShape
-import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthDimens
+import com.movtery.zalithlauncher.ui.screens.content.elements.PlayerFace
+import com.movtery.zalithlauncher.ui.screens.content.elements.VersionIconImage
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTheme
 
+/** Forma dos painéis flutuantes (barra lateral, conteúdo, notícias) */
+val ZadrinthPanelShape = RoundedCornerShape(16.dp)
+
+private val SidebarItemShape = RoundedCornerShape(12.dp)
+
 /**
- * Destinos principais da barra lateral (como no Modrinth App).
+ * Destinos principais da barra lateral.
  */
 enum class MainNavDestination(
     @StringRes val labelRes: Int,
     @DrawableRes val iconRes: Int
 ) {
-    HOME(R.string.nav_home, R.drawable.ic_home_filled),
-    EXPLORE(R.string.nav_explore, R.drawable.ic_explore_filled),
-    LIBRARY(R.string.nav_library, R.drawable.ic_library_filled),
+    HOME(R.string.nav_home, R.drawable.ic_dashboard_outlined),
+    LIBRARY(R.string.nav_library, R.drawable.ic_style_outlined),
+    EXPLORE(R.string.nav_explore, R.drawable.ic_package_2_outlined),
+    MULTIPLAYER(R.string.nav_multiplayer, R.drawable.ic_public),
     SETTINGS(R.string.nav_settings, R.drawable.ic_settings_filled),
 }
 
 /**
  * Qual item da barra lateral fica destacado para a tela atual.
- * Telas "filhas" acendem o destino a que pertencem (ex.: detalhes da
- * instância acendem a Biblioteca).
+ * Telas "filhas" acendem o destino a que pertencem.
  */
 fun TitledNavKey?.toMainNavDestination(): MainNavDestination? = when (this) {
     null, is NormalNavKey.LauncherMain -> MainNavDestination.HOME
     is NestedNavKey.Download, is NestedNavKey.AddonInfo -> MainNavDestination.EXPLORE
     is NormalNavKey.Library,
+    is NormalNavKey.Instance,
     is NormalNavKey.VersionsManager,
     is NestedNavKey.VersionSettings,
     is NestedNavKey.VersionExport -> MainNavDestination.LIBRARY
+    is NormalNavKey.Multiplayer -> MainNavDestination.MULTIPLAYER
     is NestedNavKey.Settings, is NormalNavKey.License -> MainNavDestination.SETTINGS
     else -> null
 }
 
 /**
- * Navigation Rail compacta e fixa, no estilo do Modrinth App:
- * Início / Explorar / Biblioteca, botão "+" para criar instância e,
- * embaixo, Contas e Configurações.
+ * Barra lateral flutuante no estilo do SKlauncher: avatar da conta no topo,
+ * destinos principais, botão "+", instâncias recentes e Configurações embaixo.
  */
 @Composable
-fun ModrinthNavRail(
-    selected: MainNavDestination?,
+fun ZadrinthSidebar(
+    account: Account?,
     accountsSelected: Boolean,
+    selected: MainNavDestination?,
+    recentInstances: List<Version>,
+    selectedInstanceName: String?,
     onNavigate: (MainNavDestination) -> Unit,
     onCreateInstance: () -> Unit,
     onOpenAccounts: () -> Unit,
+    onOpenInstance: (Version) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = ModrinthTheme.colors
 
     Column(
         modifier = modifier
-            .width(ModrinthDimens.NavRailWidth)
+            .width(64.dp)
+            .fillMaxHeight()
+            .clip(ZadrinthPanelShape)
+            .background(colors.background)
+            .border(1.dp, colors.border, ZadrinthPanelShape)
             .padding(vertical = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        listOf(
-            MainNavDestination.HOME,
-            MainNavDestination.EXPLORE,
-            MainNavDestination.LIBRARY
-        ).forEach { destination ->
-            RailButton(
-                selected = selected == destination,
-                iconRes = destination.iconRes,
-                label = stringResource(destination.labelRes),
-                onClick = { onNavigate(destination) }
-            )
-        }
-
-        Box(
-            modifier = Modifier
-                .padding(vertical = 4.dp)
-                .width(28.dp)
-                .height(1.dp)
-                .background(colors.border)
-        )
-
-        CreateInstanceButton(onClick = onCreateInstance)
-
-        Spacer(Modifier.weight(1f))
-
-        RailButton(
+        AccountButton(
+            account = account,
             selected = accountsSelected,
-            iconRes = R.drawable.ic_person_filled,
-            label = stringResource(R.string.nav_accounts),
             onClick = onOpenAccounts
         )
-        RailButton(
+
+        SidebarDivider()
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            listOf(
+                MainNavDestination.HOME,
+                MainNavDestination.LIBRARY,
+                MainNavDestination.EXPLORE,
+                MainNavDestination.MULTIPLAYER
+            ).forEach { destination ->
+                SidebarButton(
+                    selected = selected == destination,
+                    iconRes = destination.iconRes,
+                    label = stringResource(destination.labelRes),
+                    onClick = { onNavigate(destination) }
+                )
+            }
+
+            SidebarDivider()
+
+            SidebarButton(
+                selected = false,
+                iconRes = R.drawable.ic_add,
+                label = stringResource(R.string.nav_create_instance),
+                onClick = onCreateInstance
+            )
+
+            if (recentInstances.isNotEmpty()) {
+                SidebarDivider()
+                recentInstances.forEach { version ->
+                    InstanceButton(
+                        version = version,
+                        selected = version.getVersionName() == selectedInstanceName,
+                        onClick = { onOpenInstance(version) }
+                    )
+                }
+            }
+        }
+
+        SidebarDivider()
+
+        SidebarButton(
             selected = selected == MainNavDestination.SETTINGS,
             iconRes = MainNavDestination.SETTINGS.iconRes,
             label = stringResource(MainNavDestination.SETTINGS.labelRes),
@@ -147,7 +187,18 @@ fun ModrinthNavRail(
 }
 
 @Composable
-private fun RailButton(
+private fun SidebarDivider() {
+    Box(
+        modifier = Modifier
+            .padding(vertical = 8.dp)
+            .width(28.dp)
+            .height(1.dp)
+            .background(ModrinthTheme.colors.border)
+    )
+}
+
+@Composable
+private fun SidebarButton(
     selected: Boolean,
     @DrawableRes iconRes: Int,
     label: String,
@@ -156,17 +207,17 @@ private fun RailButton(
     val colors = ModrinthTheme.colors
     val containerColor by animateColorAsState(
         targetValue = if (selected) colors.brandHighlight else Color.Transparent,
-        label = "RailButtonContainer"
+        label = "SidebarButtonContainer"
     )
     val contentColor by animateColorAsState(
         targetValue = if (selected) colors.brand else colors.textSecondary,
-        label = "RailButtonContent"
+        label = "SidebarButtonContent"
     )
 
     Box(
         modifier = Modifier
             .size(44.dp)
-            .clip(ModrinthCardShape)
+            .clip(SidebarItemShape)
             .background(containerColor)
             .selectable(
                 selected = selected,
@@ -186,24 +237,63 @@ private fun RailButton(
 }
 
 @Composable
-private fun CreateInstanceButton(onClick: () -> Unit) {
+private fun AccountButton(
+    account: Account?,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
     val colors = ModrinthTheme.colors
-    val label = stringResource(R.string.nav_create_instance)
+    val label = account?.username ?: stringResource(R.string.nav_accounts)
     Box(
         modifier = Modifier
             .size(44.dp)
-            .clip(ModrinthCardShape)
+            .clip(SidebarItemShape)
             .background(colors.surfaceRaised)
-            .border(ModrinthDimens.BorderWidth, colors.border, ModrinthCardShape)
+            .border(
+                width = if (selected) 2.dp else 1.dp,
+                color = if (selected) colors.brand else colors.border,
+                shape = SidebarItemShape
+            )
             .clickable(role = Role.Button, onClick = onClick)
             .semantics { contentDescription = label },
         contentAlignment = Alignment.Center
     ) {
-        Icon(
-            modifier = Modifier.size(22.dp),
-            painter = painterResource(R.drawable.ic_add),
-            contentDescription = null,
-            tint = colors.brand
+        if (account != null) {
+            PlayerFace(
+                account = account,
+                avatarSize = 34.dp
+            )
+        } else {
+            Icon(
+                modifier = Modifier.size(22.dp),
+                painter = painterResource(R.drawable.ic_person_outlined),
+                contentDescription = null,
+                tint = colors.textSecondary
+            )
+        }
+    }
+}
+
+@Composable
+private fun InstanceButton(
+    version: Version,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val colors = ModrinthTheme.colors
+    val name = version.getVersionName()
+    Box(
+        modifier = Modifier
+            .size(44.dp)
+            .clip(SidebarItemShape)
+            .background(if (selected) colors.brandBrush else SolidColor(Color.Transparent))
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = name },
+        contentAlignment = Alignment.Center
+    ) {
+        VersionIconImage(
+            version = version,
+            modifier = Modifier.size(30.dp)
         )
     }
 }
