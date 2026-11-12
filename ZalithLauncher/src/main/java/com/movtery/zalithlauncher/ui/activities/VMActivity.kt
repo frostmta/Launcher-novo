@@ -116,6 +116,7 @@ import com.movtery.zalithlauncher.game.multirt.RuntimesManager
 import com.movtery.zalithlauncher.game.plugin.PluginLoader
 import com.movtery.zalithlauncher.game.renderer.Renderers
 import com.movtery.zalithlauncher.game.sdl.SdlBridge
+import com.movtery.zalithlauncher.game.instance.InstanceMetadataStore
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.ResolutionRule
@@ -496,6 +497,23 @@ class VMActivity : BaseAppCompatActivity(), SurfaceTextureListener {
         logFile.parentFile?.mkdirs() // 换过一次日志文件路径，此处创建父目录是必要的
         if (!logFile.exists() && !logFile.createNewFile()) throw IOException("Failed to create a new log file")
         LoggerBridge.start(logFile.absolutePath)
+
+        //Zadrinth: soma o tempo jogado no instance.json, um minuto por vez,
+        //só enquanto o jogo está em primeiro plano
+        if (bundle.getBoolean(INTENT_RUN_GAME)) {
+            bundle.getParcelableSafely(INTENT_GAME_CONFIG, LaunchConfig::class.java)?.version?.let { playedVersion ->
+                lifecycleScope.launch {
+                    repeatOnLifecycle(Lifecycle.State.RESUMED) {
+                        while (true) {
+                            delay(60_000L)
+                            withContext(Dispatchers.IO) {
+                                InstanceMetadataStore.addPlayTime(playedVersion, 60L)
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         //错误信息展示
         lifecycleScope.launch {
@@ -1133,6 +1151,8 @@ fun runGame(
     account: Account,
 ) {
     startGameService(context)
+    //Zadrinth: registra o início da sessão no instance.json (fora da thread principal)
+    Thread { InstanceMetadataStore.markLaunched(version) }.start()
     val intent = Intent(context, VMActivity::class.java).apply {
         putExtra(INTENT_RUN_GAME, true)
         putExtra(INTENT_GAME_CONFIG, LaunchConfig(version, account))

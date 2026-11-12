@@ -29,8 +29,8 @@ import java.io.File
  * Metadados de uma instância isolada, salvos em `instance.json` na pasta raiz
  * da instância (a mesma pasta da versão, onde ficam mods/, config/, saves/...).
  *
- * Etapa 1: somente leitura (a Biblioteca mostra o tempo jogado quando existir).
- * Etapa 2: o launcher passa a criar e atualizar este arquivo.
+ * O launcher grava o início de cada sessão (last_played) e soma o tempo
+ * jogado a cada minuto enquanto o jogo está aberto (time_played).
  */
 @Keep
 data class InstanceMetadata(
@@ -58,6 +58,8 @@ object InstanceMetadataStore {
     private const val TAG = "InstanceMetadata"
     const val FILE_NAME = "instance.json"
 
+    private val lock = Any()
+
     fun getFile(version: Version): File = File(version.getVersionPath(), FILE_NAME)
 
     /**
@@ -72,5 +74,54 @@ object InstanceMetadataStore {
         }.onFailure { e ->
             Logger.warning(TAG, "Unable to read ${file.absolutePath}", e)
         }.getOrNull()
+    }
+
+    /**
+     * Atualiza o `instance.json` (cria se não existir), preenchendo nome,
+     * versão do jogo e loader a partir da versão instalada.
+     * Deve ser chamado fora da thread principal.
+     */
+    fun update(version: Version, transform: (InstanceMetadata) -> InstanceMetadata) {
+        synchronized(lock) {
+            runCatching {
+                val current = read(version) ?: InstanceMetadata()
+                val updated = transform(current.withVersionInfo(version))
+                val file = getFile(version)
+                file.parentFile?.mkdirs()
+                val temp = File(file.parentFile, "$FILE_NAME.tmp")
+                temp.writeText(GSON.toJson(updated))
+                if (!temp.renameTo(file)) {
+                    file.writeText(GSON.toJson(updated))
+                    temp.delete()
+                }
+            }.onFailure { e ->
+                Logger.warning(TAG, "Unable to write instance metadata for ${version.getVersionName()}", e)
+            }
+        }
+    }
+
+    /** Marca o início de uma sessão de jogo */
+    fun markLaunched(version: Version) = update(version) {
+        it.copy(lastPlayed = System.currentTimeMillis())
+    }
+
+    /** Soma tempo jogado (em segundos) */
+    fun addPlayTime(version: Version, seconds: Long) = update(version) {
+        it.copy(timePlayedSeconds = it.timePlayedSeconds + seconds)
+    }
+
+    private fun InstanceMetadata.withVersionInfo(version: Version): InstanceMetadata {
+        val info = version.getVersionInfo()
+        val primary = info?.primaryLoader
+        return copy(
+            name = this.name ?: version.getVersionName(),
+            gameVersion = info?.minecraftVersion ?: this.gameVersion,
+            loader = when {
+                primary != null -> primary.loader.name.lowercase()
+                info != null -> "vanilla"
+                else -> this.loader
+            },
+            loaderVersion = primary?.version ?: this.loaderVersion,
+        )
     }
 }

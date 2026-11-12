@@ -50,7 +50,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -65,14 +64,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.movtery.zalithlauncher.R
 import com.movtery.zalithlauncher.game.addons.modloader.ModLoader
-import com.movtery.zalithlauncher.game.instance.InstanceMetadata
-import com.movtery.zalithlauncher.game.instance.InstanceMetadataStore
+import com.movtery.zalithlauncher.game.instance.InstanceStats
+import com.movtery.zalithlauncher.game.instance.InstanceStatsStore
+import com.movtery.zalithlauncher.game.instance.sortedByRecent
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionsManager
 import com.movtery.zalithlauncher.ui.base.BaseScreen
 import com.movtery.zalithlauncher.ui.screens.NormalNavKey
 import com.movtery.zalithlauncher.ui.screens.content.elements.ModLoaderIcon
 import com.movtery.zalithlauncher.ui.screens.content.elements.VersionIconImage
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.instanceModsText
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthBrandButton
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthCard
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthDimens
@@ -83,8 +84,6 @@ import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthSearchField
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTag
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTheme
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 private const val TAG = "LibraryScreen"
 
@@ -146,16 +145,10 @@ private fun LibraryContent(
     var query by rememberSaveable { mutableStateOf("") }
     var filter by rememberSaveable { mutableStateOf(LibraryFilter.ALL) }
 
-    //instance.json de cada instância, lido fora da thread principal
-    val metadata by produceState(initialValue = emptyMap<String, InstanceMetadata>(), versions) {
-        value = withContext(Dispatchers.IO) {
-            versions.mapNotNull { version ->
-                InstanceMetadataStore.read(version)?.let { version.getVersionName() to it }
-            }.toMap()
-        }
-    }
+    //Resumo de cada instância (instance.json + mods), lido fora da thread principal
+    val stats by InstanceStatsStore.stats.collectAsStateWithLifecycle()
 
-    val shown = remember(versions, query, filter, metadata) {
+    val shown = remember(versions, query, filter, stats) {
         val search = query.trim()
         versions
             .filter { version ->
@@ -169,11 +162,7 @@ private fun LibraryContent(
                     LibraryFilter.MODDED -> hasLoader
                 }
             }
-            .sortedWith(
-                compareByDescending<Version> { it.pinnedState }
-                    .thenByDescending { metadata[it.getVersionName()]?.lastPlayed ?: 0L }
-                    .thenBy(String.CASE_INSENSITIVE_ORDER) { it.getVersionName() }
-            )
+            .sortedByRecent(stats)
     }
 
     Column(
@@ -294,7 +283,7 @@ private fun LibraryContent(
                         ) { version ->
                             InstanceCard(
                                 version = version,
-                                metadata = metadata[version.getVersionName()],
+                                stats = stats[version.getVersionName()],
                                 isCurrent = version.getVersionName() == currentVersion?.getVersionName(),
                                 onOpen = {
                                     if (version.isValid()) onOpenInstance(version) else onManageInvalid()
@@ -312,7 +301,7 @@ private fun LibraryContent(
 @Composable
 private fun InstanceCard(
     version: Version,
-    metadata: InstanceMetadata?,
+    stats: InstanceStats?,
     isCurrent: Boolean,
     onOpen: () -> Unit,
     onPlay: () -> Unit,
@@ -404,7 +393,11 @@ private fun InstanceCard(
                 Spacer(Modifier.width(6.dp))
                 Text(
                     modifier = Modifier.weight(1f),
-                    text = formatPlayTime(metadata?.timePlayedSeconds ?: 0L),
+                    text = if ((stats?.modsCount ?: 0) > 0) {
+                        instanceModsText(stats?.modsCount ?: 0) + " · " + formatPlayTime(stats?.timePlayedSeconds ?: 0L)
+                    } else {
+                        formatPlayTime(stats?.timePlayedSeconds ?: 0L)
+                    },
                     style = MaterialTheme.typography.labelMedium,
                     color = colors.textSecondary,
                     maxLines = 1,

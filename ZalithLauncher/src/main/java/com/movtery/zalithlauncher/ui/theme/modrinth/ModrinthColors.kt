@@ -32,31 +32,34 @@ import androidx.compose.ui.graphics.SolidColor
 /**
  * Paleta do Zadrinth Launcher.
  *
- * O layout segue o Modrinth App; as cores vêm da identidade do Zadrinth:
- * degradê azul → violeta → rosa e fundos escuros puxados para o roxo.
+ * Visual no estilo do SKlauncher: painéis cinza-escuros neutros flutuando
+ * sobre um fundo quase preto, com o degradê azul → violeta → rosa da
+ * identidade Zadrinth nas ações principais.
  * O modo escuro é o padrão. Os valores aqui alimentam o [ColorScheme] do
  * Material3 (para que todas as telas existentes herdem o visual) e os tokens
  * de [ModrinthColors] usados pelos componentes novos.
  */
 object ZadrinthPalette {
     // --- Escuro (padrão) ---
-    /** Fundo principal do app */
-    val DarkBackground = Color(0xFF15131C)
-    /** Superfícies, cards e barras laterais */
-    val DarkSurface = Color(0xFF221F2C)
+    /** Fundo atrás dos painéis (a "moldura" do app) */
+    val DarkShell = Color(0xFF111113)
+    /** Painéis principais (barra lateral, conteúdo, notícias) */
+    val DarkBackground = Color(0xFF1A1A1E)
+    /** Cards dentro dos painéis */
+    val DarkSurface = Color(0xFF232327)
     /** Superfícies elevadas, estados de toque e campos de texto */
-    val DarkSurfaceRaised = Color(0xFF2E2A3A)
+    val DarkSurfaceRaised = Color(0xFF2C2C31)
     /** Cor de destaque da marca (violeta) */
     val Brand = Color(0xFF9D7BFF)
     /** Texto sobre a cor da marca */
     val OnBrand = Color(0xFF0E0A1A)
     /** Violeta a ~22% sobre [DarkSurface], já composto (sem alfa) */
-    val DarkBrandHighlight = Color(0xFF3D335A)
+    val DarkBrandHighlight = Color(0xFF3D3656)
     val DarkOnBrandHighlight = Color(0xFFC4B2FF)
     val DarkTextPrimary = Color(0xFFFFFFFF)
-    val DarkTextSecondary = Color(0xFFB8B2C9)
+    val DarkTextSecondary = Color(0xFFA1A1AA)
     /** Bordas sutis */
-    val DarkBorder = Color(0xFF3B3649)
+    val DarkBorder = Color(0xFF2E2E34)
 
     // --- Degradê da marca (botões Jogar / ações principais) ---
     val GradientBlue = Color(0xFF6E9BFF)
@@ -72,7 +75,8 @@ object ZadrinthPalette {
     val Pink = GradientPink
 
     // --- Claro (alternativo) ---
-    val LightBackground = Color(0xFFEFECF6)
+    val LightShell = Color(0xFFE4E4E9)
+    val LightBackground = Color(0xFFF4F4F7)
     val LightSurface = Color(0xFFFFFFFF)
     val LightSurfaceRaised = Color(0xFFF4F1FA)
     /** Violeta mais escuro para manter contraste sobre fundo claro */
@@ -122,18 +126,19 @@ val ZadrinthDarkColorScheme: ColorScheme = darkColorScheme(
     onSurfaceVariant = ZadrinthPalette.DarkTextSecondary,
     surfaceTint = ZadrinthPalette.Brand,
 
-    inverseSurface = Color(0xFFE9E5F2),
+    inverseSurface = Color(0xFFE9E9EE),
     inverseOnSurface = ZadrinthPalette.DarkBackground,
 
-    outline = Color(0xFF6A6380),
+    outline = Color(0xFF5E5E68),
     outlineVariant = ZadrinthPalette.DarkBorder,
     scrim = Color(0xFF000000),
 
-    surfaceDim = Color(0xFF0F0D15),
+    surfaceDim = ZadrinthPalette.DarkShell,
     // O Zalith usa surfaceBright como cor dos cards
     surfaceBright = ZadrinthPalette.DarkSurface,
-    surfaceContainerLowest = Color(0xFF0F0D15),
-    surfaceContainerLow = Color(0xFF1B1824),
+    // surfaceContainerLowest = moldura atrás dos painéis
+    surfaceContainerLowest = ZadrinthPalette.DarkShell,
+    surfaceContainerLow = Color(0xFF16161A),
     // O Zalith usa surfaceContainer como fundo geral do app
     surfaceContainer = ZadrinthPalette.DarkBackground,
     surfaceContainerHigh = ZadrinthPalette.DarkSurface,
@@ -178,10 +183,10 @@ val ZadrinthLightColorScheme: ColorScheme = lightColorScheme(
     outlineVariant = ZadrinthPalette.LightBorder,
     scrim = Color(0xFF000000),
 
-    surfaceDim = Color(0xFFDDD8E8),
+    surfaceDim = ZadrinthPalette.LightShell,
     surfaceBright = ZadrinthPalette.LightSurface,
-    surfaceContainerLowest = Color(0xFFFFFFFF),
-    surfaceContainerLow = Color(0xFFF7F5FB),
+    surfaceContainerLowest = ZadrinthPalette.LightShell,
+    surfaceContainerLow = Color(0xFFF7F7FA),
     surfaceContainer = ZadrinthPalette.LightBackground,
     surfaceContainerHigh = ZadrinthPalette.LightSurface,
     surfaceContainerHighest = ZadrinthPalette.LightSurfaceRaised,
@@ -196,6 +201,8 @@ val ZadrinthLightColorScheme: ColorScheme = lightColorScheme(
  */
 @Immutable
 data class ModrinthColors(
+    /** Fundo atrás dos painéis */
+    val shell: Color,
     val background: Color,
     val surface: Color,
     val surfaceRaised: Color,
@@ -218,6 +225,7 @@ data class ModrinthColors(
 fun ColorScheme.toModrinthColors(): ModrinthColors {
     val isZadrinthTheme = primary == ZadrinthPalette.Brand || primary == ZadrinthPalette.LightBrand
     return ModrinthColors(
+        shell = surfaceContainerLowest,
         background = surfaceContainer,
         surface = surfaceContainerHigh,
         surfaceRaised = surfaceContainerHighest,
