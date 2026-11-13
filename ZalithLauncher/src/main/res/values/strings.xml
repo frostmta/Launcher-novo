@@ -3216,4 +3216,28 @@
     <string name="wardrobe_loading_capes">Loading capes…</string>
     <string name="wardrobe_official_source">Official cape list from the public MineSkin API. The textures are downloaded from Mojang\'s servers and saved on your device to work offline.</string>
     <string name="wardrobe_error_download">Couldn\'t download this cape. Check your internet connection and try again.</string>
+    <!-- Zadrinth Client: servers (quick join) and new home -->
+    <string name="nav_servers">Servers</string>
+    <string name="servers_title">Servers</string>
+    <string name="servers_subtitle">Join straight into the server, skipping Minecraft\'s title screen.</string>
+    <string name="servers_featured">Featured servers</string>
+    <string name="servers_join">Join</string>
+    <string name="servers_play_with">Playing with %1$s</string>
+    <string name="servers_online">%1$s online</string>
+    <string name="servers_ping">%1$d ms</string>
+    <string name="servers_offline">Offline</string>
+    <string name="servers_checking">Checking…</string>
+    <string name="servers_premium">Original account</string>
+    <string name="servers_premium_title">%1$s needs an original account</string>
+    <string name="servers_premium_text">This server only accepts Microsoft (original) accounts. With an offline account you\'ll be disconnected as soon as you join.</string>
+    <string name="servers_join_anyway">Join anyway</string>
+    <string name="servers_filter_all">All</string>
+    <string name="servers_no_instance">Create an instance to join servers.</string>
+    <string name="servers_see_all">See all</string>
+    <string name="servers_tap_to_join">Tap a server to join it</string>
+    <string name="home_hero_brand">ZADRINTH CLIENT</string>
+    <string name="home_hero_play">PLAY</string>
+    <string name="home_hero_ready">Ready to play</string>
+    <string name="home_hero_change">Change instance</string>
+    <string name="home_hero_create">Create instance</string>
 </resources>

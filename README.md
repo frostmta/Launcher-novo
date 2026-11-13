@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/zadrinth-icon.png" alt="Ícone do Zadrinth Launcher" width="128"/>
+<img src="docs/zadrinth-icon.png" alt="Ícone do Zadrinth Client" width="128"/>
 
-# Zadrinth Launcher
+# Zadrinth Client
 
 **Launcher de Minecraft: Java Edition para Android, inspirado no Modrinth App.**
 
@@ -15,20 +15,22 @@ Português | [English](README_EN_US.md)
 </div>
 
 > [!IMPORTANT]
-> O Zadrinth Launcher é um projeto **independente e não oficial**. Ele **não tem ligação** com a Modrinth (Rinth, Inc.), com o Zalith Launcher oficial, nem com a Mojang ou a Microsoft. "Modrinth" e "Minecraft" são marcas de seus respectivos donos.
+> O Zadrinth Client é um projeto **independente e não oficial**. Ele **não tem ligação** com a Modrinth (Rinth, Inc.), com o Zalith Launcher oficial, nem com a Mojang ou a Microsoft. "Modrinth" e "Minecraft" são marcas de seus respectivos donos.
 >
 > Este app é uma **versão modificada não oficial** do [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2). Problemas encontrados aqui devem ser relatados **neste repositório**, não no do Zalith.
 
 ## ✨ Sobre o projeto
 
-O Zadrinth Launcher leva o visual e o jeito de usar do **Modrinth App** (desktop) para o celular, mantendo o motor de execução do jogo do Zalith Launcher 2 / PojavLauncher (LWJGL, renderizadores, controles na tela e login oficial da Microsoft).
+O Zadrinth Client é um client de Minecraft Java para celular focado em **PvP competitivo, BedWars e SkyWars**, com visual escuro de vidro, entrada rápida em servidores e (em breve) mods de PvP dentro do jogo, mantendo o motor de execução do jogo do Zalith Launcher 2 / PojavLauncher (LWJGL, renderizadores, controles na tela e login oficial da Microsoft).
 
 A ideia é simples: abrir o launcher, escolher uma instância e jogar, com mods, modpacks, resource packs e shaders do Modrinth instalados direto pelo app.
 
 ## 🎨 Visual
 
 - Tema escuro com degradê **azul → violeta → rosa** e fundos em tons de roxo
-- Barra lateral flutuante: sua conta, **Início**, **Biblioteca**, **Explorar**, **Armário**, **Multijogador**, instâncias recentes e **Configurações**
+- Barra lateral flutuante: sua conta, **Início**, **Biblioteca**, **Servidores**, **Explorar**, **Armário**, **Multijogador**, instâncias recentes e **Configurações**
+- **Início** com céu animado, botão **JOGAR** grande e faixa de servidores: um toque abre o Minecraft já entrando no servidor
+- **Servidores** em destaque (Mush, Hylex, GladMC, Hypixel) com ícone, jogadores online e ping ao vivo
 - **Armário** com prévia 3D do personagem, capas oficiais do Minecraft, capas originais do Zadrinth e importação de capa e skin para contas offline
 - **Explorar** com abas no topo e cartões no estilo do Modrinth; configurações com menu lateral
 - Cards com cantos arredondados, bordas finas e botão **Jogar** em degradê
