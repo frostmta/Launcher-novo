@@ -103,6 +103,11 @@ import com.movtery.zalithlauncher.utils.logging.Logger
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
+import kotlinx.coroutines.CancellationException
+import com.movtery.zalithlauncher.game.account.wardrobe.OfficialCapes
+import com.movtery.zalithlauncher.game.account.wardrobe.OfficialCape
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.LaunchedEffect
 
 private const val TAG = "WardrobeScreen"
 
@@ -138,8 +143,12 @@ fun WardrobeScreen(
 private sealed interface CapeChoice {
     data object None : CapeChoice
     data class BuiltIn(val cape: ZadrinthWardrobe.BuiltInCape) : CapeChoice
+    data class Official(val hash: String) : CapeChoice
     data object Custom : CapeChoice
 }
+
+/** Abas de capas do Armário. */
+private enum class CapeSource { OFFICIAL, ZADRINTH }
 
 @Composable
 private fun WardrobeContent(
@@ -164,14 +173,24 @@ private fun WardrobeContent(
     }
     val skinModel = remember(account, refreshWardrobe) { account?.skinModelType ?: SkinModelType.NONE }
 
-    val selectedCape: CapeChoice = remember(capeBytes, builtInCapes) {
+    val selectedCape by produceState<CapeChoice>(CapeChoice.None, capeBytes, builtInCapes) {
         val current = capeBytes
-        when {
+        value = when {
             current == null -> CapeChoice.None
             else -> builtInCapes.entries
                 .firstOrNull { it.value.contentEquals(current) }
                 ?.let { CapeChoice.BuiltIn(it.key) }
+                ?: OfficialCapes.findDownloaded(current)?.let { CapeChoice.Official(it) }
                 ?: CapeChoice.Custom
+        }
+    }
+
+    //Capas oficiais: lista da API pública do MineSkin, texturas dos servidores da Mojang
+    var capeSource by rememberSaveable { mutableStateOf(CapeSource.OFFICIAL) }
+    var officialCapes by remember { mutableStateOf(OfficialCapes.peekCatalog()) }
+    LaunchedEffect(capeSource) {
+        if (capeSource == CapeSource.OFFICIAL && officialCapes == null) {
+            officialCapes = runCatching { OfficialCapes.catalog() }.getOrDefault(emptyList())
         }
     }
 
@@ -297,6 +316,21 @@ private fun WardrobeContent(
                 }
             }
 
+            Spacer(Modifier.height(10.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                ModrinthFilterChip(
+                    selected = capeSource == CapeSource.OFFICIAL,
+                    text = stringResource(R.string.wardrobe_tab_official),
+                    onClick = { capeSource = CapeSource.OFFICIAL }
+                )
+                ModrinthFilterChip(
+                    selected = capeSource == CapeSource.ZADRINTH,
+                    text = stringResource(R.string.wardrobe_tab_zadrinth),
+                    onClick = { capeSource = CapeSource.ZADRINTH }
+                )
+            }
+
             Spacer(Modifier.height(12.dp))
 
             if (!isLocal) {
@@ -338,25 +372,87 @@ private fun WardrobeContent(
                         )
                     }
                 }
-                items(
-                    items = builtInCapes.entries.toList(),
-                    key = { it.key.id }
-                ) { (cape, bytes) ->
-                    CapeTile(
-                        name = stringResource(cape.nameRes),
-                        image = rememberCapeImage(bytes),
-                        selected = (selectedCape as? CapeChoice.BuiltIn)?.cape == cape,
-                        enabled = isLocal && !busy,
-                        onClick = { runWardrobeAction { ZadrinthWardrobe.applyCape(current, bytes) } }
-                    )
+                when (capeSource) {
+                    CapeSource.OFFICIAL -> {
+                        val capes = officialCapes
+                        if (capes == null) {
+                            item(key = "loading", span = { GridItemSpan(maxLineSpan) }) {
+                                Row(
+                                    modifier = Modifier.padding(vertical = 12.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        strokeWidth = 2.dp
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.wardrobe_loading_capes),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = colors.textSecondary
+                                    )
+                                }
+                            }
+                        } else {
+                            items(
+                                items = capes,
+                                key = { "official_" + it.hash }
+                            ) { cape ->
+                                OfficialCapeTile(
+                                    cape = cape,
+                                    reloadKey = refreshWardrobe,
+                                    selected = (selectedCape as? CapeChoice.Official)?.hash == cape.hash,
+                                    enabled = isLocal && !busy,
+                                    onClick = {
+                                        runWardrobeAction {
+                                            val bytes = try {
+                                                OfficialCapes.texture(cape)
+                                            } catch (e: CancellationException) {
+                                                throw e
+                                            } catch (th: Throwable) {
+                                                Logger.warning(TAG, "Failed to download cape ${cape.name}", th)
+                                                throw WardrobeImageException(R.string.wardrobe_error_download)
+                                            }
+                                            ZadrinthWardrobe.applyCape(current, bytes)
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    CapeSource.ZADRINTH -> {
+                        items(
+                            items = builtInCapes.entries.toList(),
+                            key = { it.key.id }
+                        ) { (cape, bytes) ->
+                            CapeTile(
+                                name = stringResource(cape.nameRes),
+                                image = rememberCapeImage(bytes),
+                                selected = (selectedCape as? CapeChoice.BuiltIn)?.cape == cape,
+                                enabled = isLocal && !busy,
+                                onClick = { runWardrobeAction { ZadrinthWardrobe.applyCape(current, bytes) } }
+                            )
+                        }
+                    }
                 }
                 item(key = "note", span = { GridItemSpan(maxLineSpan) }) {
-                    Text(
+                    Column(
                         modifier = Modifier.padding(top = 4.dp),
-                        text = stringResource(R.string.wardrobe_visibility_note),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = colors.textSecondary
-                    )
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.wardrobe_visibility_note),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = colors.textSecondary
+                        )
+                        if (capeSource == CapeSource.OFFICIAL) {
+                            Text(
+                                text = stringResource(R.string.wardrobe_official_source),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.textSecondary
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -525,12 +621,50 @@ private fun rememberCapeImage(bytes: ByteArray?): ImageBitmap? = remember(bytes)
     }
 }
 
+/** Capa oficial: baixa a textura quando o cartão aparece na tela (e guarda no aparelho). */
+@Composable
+private fun OfficialCapeTile(
+    cape: OfficialCape,
+    reloadKey: Any?,
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+) {
+    val result by produceState<Result<ByteArray>?>(
+        OfficialCapes.peekTexture(cape.hash)?.let { Result.success(it) },
+        cape.hash,
+        reloadKey
+    ) {
+        if (value?.isSuccess != true) {
+            value = OfficialCapes.peekTexture(cape.hash)?.let { Result.success(it) }
+                ?: try {
+                    Result.success(OfficialCapes.texture(cape))
+                } catch (e: CancellationException) {
+                    throw e
+                } catch (th: Throwable) {
+                    Result.failure(th)
+                }
+        }
+    }
+    CapeTile(
+        name = cape.name,
+        image = rememberCapeImage(result?.getOrNull()),
+        selected = selected,
+        enabled = enabled,
+        loading = result == null,
+        failed = result?.isFailure == true,
+        onClick = onClick
+    )
+}
+
 @Composable
 private fun CapeTile(
     name: String,
     image: ImageBitmap?,
     selected: Boolean,
     enabled: Boolean,
+    loading: Boolean = false,
+    failed: Boolean = false,
     onClick: () -> Unit,
 ) {
     val colors = ModrinthTheme.colors
@@ -563,6 +697,11 @@ private fun CapeTile(
                     modifier = Modifier.fillMaxSize(),
                     image = image
                 )
+            } else if (loading) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
             } else {
                 Box(
                     modifier = Modifier
@@ -573,7 +712,9 @@ private fun CapeTile(
                 ) {
                     Icon(
                         modifier = Modifier.size(22.dp),
-                        painter = painterResource(R.drawable.ic_close),
+                        painter = painterResource(
+                            if (failed) R.drawable.ic_refresh else R.drawable.ic_close
+                        ),
                         contentDescription = null,
                         tint = colors.textSecondary
                     )

@@ -29,7 +29,7 @@ A ideia é simples: abrir o launcher, escolher uma instância e jogar, com mods,
 
 - Tema escuro com degradê **azul → violeta → rosa** e fundos em tons de roxo
 - Barra lateral flutuante: sua conta, **Início**, **Biblioteca**, **Explorar**, **Armário**, **Multijogador**, instâncias recentes e **Configurações**
-- **Armário** com prévia 3D do personagem, capas originais e importação de capa e skin para contas offline
+- **Armário** com prévia 3D do personagem, capas oficiais do Minecraft, capas originais do Zadrinth e importação de capa e skin para contas offline
 - **Explorar** com abas no topo e cartões no estilo do Modrinth; configurações com menu lateral
 - Cards com cantos arredondados, bordas finas e botão **Jogar** em degradê
 
