@@ -51,6 +51,8 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
           ls -la build/libs
+          echo "Refmap dos mixins (nomes que o jogo vai procurar):"
+          unzip -p build/libs/zadrinth-client-*.jar '*refmap.json' || echo "(sem refmap)"
 
       - name: Upload mod
         uses: actions/upload-artifact@v7
