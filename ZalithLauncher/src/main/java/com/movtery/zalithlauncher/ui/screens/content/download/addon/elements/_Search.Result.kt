@@ -99,6 +99,12 @@ import com.movtery.zalithlauncher.utils.animation.getAnimateTween
 import com.movtery.zalithlauncher.utils.formatNumberByLocale
 import com.movtery.zalithlauncher.utils.string.isEmptyOrBlank
 import org.jackhuang.hmcl.addon.AddonProjectInfo
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTheme
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTag
+import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthCardShape
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.BorderStroke
 
 sealed interface SearchAddonState {
     data object Searching: SearchAddonState
@@ -426,6 +432,10 @@ private fun ResultList(
     }
 }
 
+/**
+ * Zadrinth: cartão de resultado no estilo do Modrinth — ícone, título e autor,
+ * descrição em duas linhas, etiquetas em pílula e números à direita.
+ */
 @Composable
 fun ResultProjectLayout(
     modifier: Modifier = Modifier,
@@ -440,9 +450,7 @@ fun ResultProjectLayout(
     categories: List<PlatformFilterCode>? = null,
     followsCount: Long? = null,
     isInstalled: Boolean = false,
-//    isFavorite: Boolean = false,
-//    onFavoriteClick: (() -> Unit)? = null,
-    shape: Shape = MaterialTheme.shapes.large,
+    shape: Shape = ModrinthCardShape,
     influencedByBackground: Boolean = true,
     color: Color = cardColor(influencedByBackground),
     contentColor: Color = onCardColor(),
@@ -450,6 +458,7 @@ fun ResultProjectLayout(
     onClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val colors = ModrinthTheme.colors
 
     val scale = remember { Animatable(initialValue = 0.95f) }
     LaunchedEffect(Unit) {
@@ -461,154 +470,144 @@ fun ResultProjectLayout(
         shape = shape,
         color = color,
         contentColor = contentColor,
+        border = BorderStroke(1.dp, colors.border),
         onClick = onClick
     ) {
         Row(
             modifier = Modifier
                 .backgroundGlass(blur, color, influencedByBackground)
-                .padding(all = 8.dp)
+                .padding(all = 12.dp)
                 .height(IntrinsicSize.Min),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             AddonIcon(
                 modifier = Modifier
-                    .clip(shape = RoundedCornerShape(10.dp))
-                    .align(Alignment.CenterVertically),
+                    .clip(shape = RoundedCornerShape(12.dp))
+                    .align(Alignment.Top),
                 size = 72.dp,
                 iconUrl = iconUrl
             )
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
                 ProjectTitleHead(
                     platform = platform,
                     title = title,
                 )
 
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                ) {
+                // 作者
+                authors?.takeIf { it.isNotEmpty() }?.let {
                     Row(
-                        modifier = Modifier
-                            .alpha(0.7f)
-                            .fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // 作者
-                        authors?.let {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    modifier = Modifier.size(14.dp),
-                                    painter = painterResource(R.drawable.ic_person_filled),
-                                    contentDescription = null
-                                )
-                                MarqueeText(
-                                    text = it.joinToString(", "),
-                                    style = MaterialTheme.typography.labelSmall,
-                                )
-                            }
-                        }
-
-                        // 下载量
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                modifier = Modifier.size(14.dp),
-                                painter = painterResource(R.drawable.ic_download_2_filled),
-                                contentDescription = null
-                            )
-                            Text(
-                                text = formatNumberByLocale(context, downloads),
-                                style = MaterialTheme.typography.labelSmall
-                            )
-                        }
-
-                        // 收藏数量（Modrinth）
-                        followsCount?.let {
-                            Row(
-                                horizontalArrangement = Arrangement.spacedBy(4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    modifier = Modifier.size(14.dp),
-                                    painter = painterResource(R.drawable.ic_star_filled),
-                                    contentDescription = null
-                                )
-                                Text(
-                                    text = formatNumberByLocale(context, it),
-                                    style = MaterialTheme.typography.labelMedium
-                                )
-                            }
-                        }
+                        Icon(
+                            modifier = Modifier.size(14.dp),
+                            painter = painterResource(R.drawable.ic_person_filled),
+                            contentDescription = null,
+                            tint = colors.textSecondary
+                        )
+                        Text(
+                            text = it.joinToString(", "),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = colors.textSecondary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
+                }
 
-                    //描述
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                //描述
+                Text(
+                    text = description,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = colors.textSecondary,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                //标签栏
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .basicMarquee(Int.MAX_VALUE),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    modloaders?.forEach { modloader ->
+                        ModrinthTag(
+                            text = modloader.getDisplayName(),
+                            color = colors.brandHighlight,
+                            contentColor = colors.brand
+                        )
+                    }
+                    categories?.forEach { category ->
+                        ModrinthTag(text = stringResource(category.getDisplayName()))
+                    }
+                }
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End,
+                verticalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                // 下载量
+                ResultStat(
+                    iconRes = R.drawable.ic_download_2_filled,
+                    text = formatNumberByLocale(context, downloads)
+                )
+                // 收藏数量（Modrinth）
+                followsCount?.let {
+                    ResultStat(
+                        iconRes = R.drawable.ic_star_filled,
+                        text = formatNumberByLocale(context, it)
                     )
                 }
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    //标签栏
-                    Row(
-                        modifier = Modifier
-                            .weight(1f)
-                            .basicMarquee(Int.MAX_VALUE)
-                            .alpha(0.7f),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        modloaders?.let {
-                            it.forEach { modloader ->
-                                Text(
-                                    text = modloader.getDisplayName(),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        }
-                        categories?.let {
-                            it.forEach { category ->
-                                Text(
-                                    text = stringResource(category.getDisplayName()),
-                                    style = MaterialTheme.typography.labelSmall
-                                )
-                            }
-                        }
-                    }
+                Spacer(modifier = Modifier.weight(1f))
 
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                     //资源的类别
                     if (classes != null) {
                         ClassesIdentifier(classes = classes)
                     }
-
                     if (isInstalled) {
                         InstalledModBadge()
                     }
-
-//                    onFavoriteClick?.let { onFavorite ->
-//                        FavoriteToggleLabel(
-//                            isFavorite = isFavorite,
-//                            onClick = onFavorite
-//                        )
-//                    }
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ResultStat(
+    iconRes: Int,
+    text: String,
+) {
+    val colors = ModrinthTheme.colors
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            modifier = Modifier.size(16.dp),
+            painter = painterResource(iconRes),
+            contentDescription = null,
+            tint = colors.textSecondary
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = colors.textPrimary
+        )
     }
 }
 
@@ -630,7 +629,7 @@ fun ProjectTitleHead(
                 .weight(1f)
                 .basicMarquee(iterations = Int.MAX_VALUE),
             text = title,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.titleMedium,
         )
         //平台标签
         PlatformIdentifier(platform = platform)

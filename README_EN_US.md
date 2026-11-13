@@ -28,7 +28,9 @@ Open the launcher, pick an instance and play, with Modrinth mods, modpacks, reso
 ## 🎨 Look
 
 - Dark theme with a **blue → violet → pink** gradient and purple-tinted backgrounds
-- Fixed side bar: **Home**, **Explore**, **Library**, **Create instance**, **Accounts** and **Settings**
+- Floating side bar: your account, **Home**, **Library**, **Explore**, **Wardrobe**, **Multiplayer**, recent instances and **Settings**
+- **Wardrobe** with a 3D character preview, original capes and cape/skin import for offline accounts
+- **Explore** with top tabs and Modrinth-style result cards; settings with a side menu
 - Rounded cards with thin borders and a gradient **Play** button
 
 ## 🗺️ Roadmap

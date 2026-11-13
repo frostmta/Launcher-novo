@@ -154,7 +154,7 @@ enum class CardPosition {
 @Composable
 fun rememberSettingsCardShape(
     position: CardPosition,
-    outerShape: Dp = 28.dp,
+    outerShape: Dp = 12.dp,
     innerShape: Dp = 4.dp
 ): Shape {
     return remember(position, outerShape, innerShape) {
@@ -205,7 +205,7 @@ fun rememberSettingsCardShape(
 fun SettingsCard(
     modifier: Modifier = Modifier,
     position: CardPosition,
-    outerShape: Dp = 28.dp,
+    outerShape: Dp = 12.dp,
     innerShape: Dp = 4.dp,
     content: @Composable ColumnScope.() -> Unit
 ) {
@@ -222,7 +222,7 @@ fun SettingsCard(
 fun SettingsCard(
     modifier: Modifier = Modifier,
     position: CardPosition,
-    outerShape: Dp = 28.dp,
+    outerShape: Dp = 12.dp,
     innerShape: Dp = 4.dp,
     onClick: () -> Unit,
     enabled: Boolean = true,
@@ -247,7 +247,7 @@ fun SettingsCard(
     summary: String? = null,
     titleStyle: TextStyle = MaterialTheme.typography.titleSmall,
     summaryStyle: TextStyle = MaterialTheme.typography.labelSmall,
-    outerShape: Dp = 28.dp,
+    outerShape: Dp = 12.dp,
     innerShape: Dp = 4.dp,
     innerPadding: PaddingValues = PaddingValues(all = 16.dp),
     onClick: () -> Unit,

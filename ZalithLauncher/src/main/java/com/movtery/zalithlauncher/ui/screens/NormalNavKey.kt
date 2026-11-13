@@ -49,6 +49,10 @@ sealed interface NormalNavKey : TitledNavKey {
     @Serializable data object Library : NormalNavKey {
         @Contextual override val title: AndroidStringText = androidText(R.string.library_title)
     }
+    /** Armário: capas e skin para contas offline */
+    @Serializable data object Wardrobe : NormalNavKey {
+        @Contextual override val title: AndroidStringText = androidText(R.string.wardrobe_title)
+    }
     /** Página de uma instância (cabeçalho com Jogar + abas Conteúdo/Mundos/Capturas/Arquivos) */
     @Serializable data class Instance(val versionName: String) : NormalNavKey
     /** 版本管理屏幕 */

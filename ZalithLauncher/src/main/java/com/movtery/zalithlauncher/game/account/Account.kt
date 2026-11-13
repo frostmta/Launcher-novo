@@ -68,6 +68,10 @@ data class Account(
 
     fun getCapeFile() = File(PathManager.DIR_ACCOUNT_CAPE, "$uniqueUUID.png")
 
+    /** Zadrinth: a conta tem uma capa salva (baixada da Mojang ou escolhida no Armário) */
+    val hasCapeFile: Boolean
+        get() = getCapeFile().exists()
+
     private fun getTempSkinFile() = File(PathManager.DIR_CACHE, "account_skin_${uniqueUUID}.tmp.png")
     private fun getTempCapeFile() = File(PathManager.DIR_CACHE, "account_cape_${uniqueUUID}.tmp.png")
 
