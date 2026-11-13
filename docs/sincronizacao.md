@@ -28,15 +28,16 @@ Para isso os clients avisam uns aos outros por um projeto **Supabase** (grátis)
 1. Entre em **supabase.com**, crie uma conta e um projeto (plano grátis).
 2. No projeto, abra **SQL Editor → New query**, cole todo o arquivo
    [`docs/supabase.sql`](supabase.sql) e toque em **Run**.
-3. Abra **Project Settings → API** e copie:
+3. Toque em **Connect** no topo do projeto (ou abra **Project Settings → API Keys**) e copie:
    - **Project URL** (algo como `https://xxxx.supabase.co`)
-   - a chave **anon public**
+   - a **Publishable key** (começa com `sb_publishable_`). Projetos antigos podem
+     mostrar a chave **anon public** no lugar: as duas funcionam
 4. No GitHub, abra o repositório → **Settings → Secrets and variables → Actions →
    New repository secret** e crie:
    - `SUPABASE_URL` = o Project URL
-   - `SUPABASE_ANON_KEY` = a chave anon public
+   - `SUPABASE_ANON_KEY` = a Publishable key (ou a anon public)
 5. Publique uma nova release (ou rode o CI de novo). O mod passa a vir com a
    sincronização ligada, e no menu aparece **● Sincronização ligada**.
 
-A chave "anon public" pode ir dentro do app: ela só consegue chamar as duas
+A Publishable key (ou a "anon public") pode ir dentro do app: ela só consegue chamar as duas
 funções do `supabase.sql`, porque a tabela fica fechada para acesso direto.
