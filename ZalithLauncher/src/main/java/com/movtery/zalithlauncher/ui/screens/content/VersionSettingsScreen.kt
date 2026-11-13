@@ -85,6 +85,7 @@ import com.movtery.zalithlauncher.viewmodel.ModifyPayload
 import com.movtery.zalithlauncher.viewmodel.ModifyVersionViewModel
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
 import com.movtery.zalithlauncher.viewmodel.sendToast
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.ZadrinthSideMenu
 
 @Composable
 fun VersionSettingsScreen(
@@ -119,13 +120,16 @@ fun VersionSettingsScreen(
             Row(modifier = Modifier.fillMaxSize()) {
                 TabMenu(
                     isVisible = isVisible,
+                    title = key.version.getVersionName(),
                     backStack = key.backStack,
                     versionsScreenKey = key.currentKey,
                     modifier = Modifier.fillMaxHeight()
                 )
 
                 NavigationUI(
-                    modifier = Modifier.fillMaxHeight(),
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxHeight(),
                     key = key,
                     modifyViewModel = modifyViewModel,
                     backScreenViewModel = backScreenViewModel,
@@ -171,55 +175,20 @@ private val settingItems = listOf(
 @Composable
 private fun TabMenu(
     isVisible: Boolean,
+    title: String,
     backStack: NavBackStack<TitledNavKey>,
     versionsScreenKey: TitledNavKey?,
     modifier: Modifier = Modifier
 ) {
     val ctx = rememberAnimatedContext(isVisible = isVisible)
-
-    val scrollState = rememberScrollState()
-    Column(
-        modifier = modifier
-            .fadeEdge(scrollState)
-            .width(IntrinsicSize.Min)
-            .padding(start = 8.dp)
-            .animated(ctx, from = AnimatedDirection.Left)
-            .verticalScroll(scrollState),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Spacer(modifier = Modifier.height(12.dp))
-        settingItems.forEach { item ->
-            if (item.division) {
-                HorizontalDivider(
-                    modifier = Modifier
-                        .padding(vertical = 12.dp)
-                        .fillMaxWidth(0.4f)
-                        .alpha(0.4f),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
-
-            NavigationRailItem(
-                selected = versionsScreenKey === item.key,
-                onClick = {
-                    backStack.navigateOnce(item.key)
-                },
-                icon = {
-                    item.icon()
-                },
-                label = {
-                    Text(
-                        modifier = Modifier.basicMarquee(iterations = Int.MAX_VALUE),
-                        text = stringResource(item.textRes),
-                        maxLines = 1,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-    }
+    ZadrinthSideMenu(
+        modifier = modifier.animated(ctx, from = AnimatedDirection.Left),
+        title = title,
+        subtitle = stringResource(R.string.instance_settings),
+        items = settingItems,
+        isSelected = { item -> versionsScreenKey === item.key },
+        onSelect = { item -> backStack.navigateOnce(item.key) }
+    )
 }
 
 @Composable

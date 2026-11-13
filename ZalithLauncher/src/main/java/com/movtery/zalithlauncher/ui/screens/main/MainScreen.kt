@@ -100,6 +100,7 @@ import com.movtery.zalithlauncher.ui.screens.content.AccountManageScreen
 import com.movtery.zalithlauncher.ui.screens.content.DownloadScreen
 import com.movtery.zalithlauncher.ui.screens.content.FileSelectorScreen
 import com.movtery.zalithlauncher.ui.screens.content.LibraryScreen
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.WardrobeScreen
 import com.movtery.zalithlauncher.ui.screens.content.LicenseScreen
 import com.movtery.zalithlauncher.ui.screens.content.LogViewScreen
 import com.movtery.zalithlauncher.ui.screens.content.MultiplayerScreen
@@ -263,7 +264,12 @@ fun MainScreen(
     //As telas novas do Zadrinth têm o próprio cabeçalho; as herdadas do Zalith usam a linha "Voltar"
     val showContentHeader = !inLauncherScreen &&
             mainScreenKey !is NormalNavKey.Library &&
-            mainScreenKey !is NormalNavKey.Instance
+            mainScreenKey !is NormalNavKey.Wardrobe &&
+            mainScreenKey !is NormalNavKey.Instance &&
+            //Explorar e as configurações têm o próprio cabeçalho (abas/menu lateral)
+            mainScreenKey !is NestedNavKey.Download &&
+            mainScreenKey !is NestedNavKey.Settings &&
+            mainScreenKey !is NestedNavKey.VersionSettings
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -311,6 +317,11 @@ fun MainScreen(
                             MainNavDestination.EXPLORE -> {
                                 if (mainScreenKey !is NestedNavKey.Download) {
                                     navigator.downloadTab(screenBackStackModel.downloadModPackScreen)
+                                }
+                            }
+                            MainNavDestination.WARDROBE -> {
+                                if (mainScreenKey !is NormalNavKey.Wardrobe) {
+                                    navigator.topLevel(NormalNavKey.Wardrobe)
                                 }
                             }
                             MainNavDestination.MULTIPLAYER -> {
@@ -607,6 +618,12 @@ private fun NavigationUI(
                         onManageInvalid = {
                             screenBackStackModel.mainScreen.navigateTo(NormalNavKey.VersionsManager)
                         }
+                    )
+                }
+                entry<NormalNavKey.Wardrobe> {
+                    WardrobeScreen(
+                        backStackViewModel = screenBackStackModel,
+                        onOpenAccounts = { navigator.topLevel(NormalNavKey.AccountManager()) }
                     )
                 }
                 entry<NormalNavKey.Instance> { key ->
