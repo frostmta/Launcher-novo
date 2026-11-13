@@ -68,6 +68,7 @@ import java.io.File
 import javax.microedition.khronos.egl.EGL10
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.egl.EGLContext
+import com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod
 
 private const val TAG = "GameLauncher"
 
@@ -111,6 +112,11 @@ class GameLauncher(
             (Renderers.getCurrentRenderer() as? ConfigurableRenderer)?.let { renderer ->
                 prepareRendererLaunchConfig(renderer, version)
             }
+        }
+
+        //Zadrinth Client: instala/atualiza o mod do jogo em instâncias 1.8.9 + Legacy Fabric
+        withContext(Dispatchers.IO) {
+            ZadrinthClientMod.install(activity, version)
         }
 
         val manifest = GSON.fromJson(File(version.getVersionPath(), "${version.getVersionName()}.json").readText(), GameManifest::class.java)

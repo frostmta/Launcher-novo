@@ -18,6 +18,8 @@ jobs:
       STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
       OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
 
   Upload-to-Release:
     needs: Build
@@ -55,6 +57,10 @@ jobs:
 
           echo "Found $(ls ./mappings/ | wc -l) mapping file(s)"
 
+          mkdir -p ./mods
+          find ./artifacts/zadrinth-client-mod -name "zadrinth-client-*.jar" -type f -exec cp {} ./mods/ \;
+          echo "Found $(ls ./mods/ | wc -l) mod file(s)"
+
       - name: Upload To Release
         uses: softprops/action-gh-release@v3
         with:
@@ -62,4 +68,5 @@ jobs:
           files: |
             ./apks/*.apk
             ./mappings/*.txt
+            ./mods/*.jar
           fail_on_unmatched_files: true

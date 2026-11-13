@@ -32,3 +32,8 @@ LWJGL/*/build/
 
 .vscode/
 
+
+# Mod do jogo copiado pelo CI para dentro do APK
+ZalithLauncher/src/main/assets/client/*.jar
+client-mod/build/
+client-mod/.gradle/
