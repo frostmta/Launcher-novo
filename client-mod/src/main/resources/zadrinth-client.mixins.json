@@ -1,0 +1,17 @@
+{
+  "required": true,
+  "minVersion": "0.8",
+  "package": "io.github.frostmta.zadrinth.client.mixin",
+  "compatibilityLevel": "JAVA_8",
+  "client": [
+    "GameOptionsMixin",
+    "InGameHudMixin",
+    "KeyBindingAccessor",
+    "KeyBindingMixin",
+    "MinecraftClientMixin",
+    "PlayerListHudMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 0
+  }
+}

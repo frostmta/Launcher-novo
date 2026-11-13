@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "zadrinth-client",
+  "version": "${version}",
+  "name": "Zadrinth Client",
+  "description": "Mods de PvP do Zadrinth Client: ToggleSprint/ToggleSneak, editor de HUD e ícone no TAB para quem usa o client.",
+  "authors": ["frostmta"],
+  "contact": {
+    "sources": "https://github.com/frostmta/Launcher-novo"
+  },
+  "license": "GPL-3.0-or-later",
+  "icon": "assets/zadrinth-client/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["io.github.frostmta.zadrinth.client.ZadrinthClient"]
+  },
+  "mixins": ["zadrinth-client.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": "1.8.9"
+  }
+}
