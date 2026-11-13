@@ -1,4 +1,4 @@
-# Sincronização entre jogadores (ícone no TAB)
+# Sincronização entre jogadores (ícone no TAB e cosméticos)
 
 O ícone do Zadrinth Client aparece no TAB só para quem também usa o client.
 Para isso os clients avisam uns aos outros por um projeto **Supabase** (grátis).
@@ -39,5 +39,21 @@ Para isso os clients avisam uns aos outros por um projeto **Supabase** (grátis)
 5. Publique uma nova release (ou rode o CI de novo). O mod passa a vir com a
    sincronização ligada, e no menu aparece **● Sincronização ligada**.
 
-A Publishable key (ou a "anon public") pode ir dentro do app: ela só consegue chamar as duas
+A Publishable key (ou a "anon public") pode ir dentro do app: ela só consegue chamar as
 funções do `supabase.sql`, porque a tabela fica fechada para acesso direto.
+
+## Cosméticos (0.6.0)
+
+Junto com o aviso de "estou jogando", o client manda o que você está vestindo
+(ids da capa, asas e bandana + cor/RGB/brilho). A resposta da consulta traz o
+visual de cada jogador do Zadrinth no mesmo servidor, então todo mundo se vê
+igual. Para isso o Supabase precisa das funções novas `zadrinth_heartbeat_v2` e
+`zadrinth_online_v2`:
+
+1. Abra o projeto no Supabase → **SQL Editor → New query**.
+2. Cole de novo o [`docs/supabase.sql`](supabase.sql) inteiro e toque em **Run**.
+   Pode rodar quantas vezes quiser: só cria o que falta, nada é apagado.
+
+Se o projeto ainda não tiver as funções novas, o client volta sozinho para as
+antigas: o ícone no TAB continua funcionando, só os cosméticos dos outros não
+aparecem.

@@ -3,6 +3,7 @@ package io.github.frostmta.zadrinth.client.config;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import io.github.frostmta.zadrinth.client.ZadrinthClient;
+import io.github.frostmta.zadrinth.client.cosmetics.Loadout;
 import net.minecraft.client.MinecraftClient;
 
 import java.io.File;
@@ -13,6 +14,8 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 /** Configuração do Zadrinth Client, salva em config/zadrinth-client.json. */
 public final class ZadrinthConfig {
@@ -37,6 +40,16 @@ public final class ZadrinthConfig {
 	/** Avisa ao servidor do Zadrinth que você está jogando (para outros verem o ícone) */
 	public boolean sharePresence = true;
 
+	// --- Cosméticos ---
+	/** Itens resgatados/comprados na loja (ex.: "capes/nebulosa") */
+	public Set<String> ownedCosmetics = new LinkedHashSet<>();
+	/** O que você está usando */
+	public Loadout loadout = new Loadout();
+	/** Capa com física de tecido (vale para todas as capas que você vê) */
+	public boolean clothCape = true;
+	/** Mostrar os cosméticos de outros jogadores do Zadrinth */
+	public boolean showOthersCosmetics = true;
+
 	public static ZadrinthConfig get() {
 		return instance;
 	}
@@ -55,6 +68,8 @@ public final class ZadrinthConfig {
 			ZadrinthConfig loaded = GSON.fromJson(reader, ZadrinthConfig.class);
 			if (loaded != null) {
 				if (loaded.toggleSprintHudPosition == null) loaded.toggleSprintHudPosition = new HudPosition(0.005f, 0.96f, 1.0f);
+				if (loaded.ownedCosmetics == null) loaded.ownedCosmetics = new LinkedHashSet<>();
+				if (loaded.loadout == null) loaded.loadout = new Loadout();
 				instance = loaded;
 			}
 		} catch (Exception e) {

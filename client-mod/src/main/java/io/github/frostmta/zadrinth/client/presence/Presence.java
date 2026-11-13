@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import io.github.frostmta.zadrinth.client.ZadrinthClient;
 import io.github.frostmta.zadrinth.client.config.ZadrinthConfig;
+import io.github.frostmta.zadrinth.client.cosmetics.Loadout;
+import io.github.frostmta.zadrinth.client.cosmetics.Wardrobe;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayNetworkHandler;
 import net.minecraft.client.network.PlayerListEntry;
@@ -19,16 +21,18 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Sincronização entre jogadores do Zadrinth Client (para o ícone no TAB).
+ * Sincronização entre jogadores do Zadrinth Client (ícone no TAB e cosméticos).
  *
  * Como funciona:
  * 1. Enquanto você está num servidor, o client avisa a cada 60 s:
@@ -36,9 +40,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * 2. A cada 30 s (10 s com o TAB aberto), ele pergunta quais nomes da lista
  *    de jogadores daquele servidor também mandaram esse aviso recentemente.
  * 3. Quem estiver na resposta ganha o ícone do Zadrinth no TAB.
+ * 4. Junto com o aviso vai o que você está vestindo (capa, asas, bandana e as
+ *    cores); a resposta traz o visual de cada um, para todos se verem iguais.
  *
  * O servidor é um projeto Supabase (veja docs/supabase.sql). Só vão para lá
- * o endereço do servidor, o seu nome e os nomes da lista do TAB.
+ * o endereço do servidor, o seu nome, os nomes da lista do TAB e os ids dos
+ * cosméticos equipados. Se o projeto ainda não tiver as funções novas (_v2),
+ * o client volta para as antigas: o TAB continua funcionando, só sem cosméticos.
  */
 public final class Presence {
 	private static final long HEARTBEAT_MS = 60_000L;
@@ -57,6 +65,9 @@ public final class Presence {
 	private static final AtomicBoolean QUERY_RUNNING = new AtomicBoolean(false);
 
 	private static volatile Set<String> online = Collections.emptySet();
+	private static volatile Map<String, Loadout> cosmetics = Collections.emptyMap();
+	/** O Supabase tem as funções _v2 (cosméticos)? Começa tentando que sim. */
+	private static volatile boolean v2Available = true;
 	private static String currentServer;
 	private static long lastHeartbeat;
 	private static long lastQuery;
@@ -78,6 +89,16 @@ public final class Presence {
 		return online.contains(name.toLowerCase(Locale.ROOT));
 	}
 
+	/** O visual de outro jogador do Zadrinth neste servidor (null se não usa o client). */
+	public static Loadout cosmeticsOf(String name) {
+		return name == null ? null : cosmetics.get(name.toLowerCase(Locale.ROOT));
+	}
+
+	/** Manda o próximo aviso logo (ex.: você trocou de capa). */
+	public static void requestHeartbeat() {
+		lastHeartbeat = 0L;
+	}
+
 	public static void tick(MinecraftClient client) {
 		ServerInfo info = client.getCurrentServerEntry();
 		if (client.world == null || client.player == null || info == null || info.address == null) {
@@ -93,10 +114,11 @@ public final class Presence {
 		if (config.sharePresence && now - lastHeartbeat > HEARTBEAT_MS) {
 			lastHeartbeat = now;
 			final String name = client.player.getGameProfile().getName();
-			EXECUTOR.execute(() -> heartbeat(server, name));
+			final JsonObject outfit = Wardrobe.local().toJson();
+			EXECUTOR.execute(() -> heartbeat(server, name, outfit));
 		}
 
-		if (!config.tabIconEnabled) return;
+		if (!config.tabIconEnabled && !config.showOthersCosmetics) return;
 		boolean tabOpen = client.options.playerListKey.isPressed();
 		if (now - lastQuery > (tabOpen ? QUERY_TAB_OPEN_MS : QUERY_MS) && !QUERY_RUNNING.get()) {
 			ClientPlayNetworkHandler handler = client.getNetworkHandler();
@@ -124,6 +146,7 @@ public final class Presence {
 	private static void reset(String server) {
 		currentServer = server;
 		online = Collections.emptySet();
+		cosmetics = Collections.emptyMap();
 		lastHeartbeat = 0L;
 		lastQuery = 0L;
 	}
@@ -136,15 +159,33 @@ public final class Presence {
 		return value;
 	}
 
-	private static void heartbeat(String server, String name) {
+	private static void heartbeat(String server, String name, JsonObject outfit) {
 		JsonObject body = new JsonObject();
 		body.addProperty("p_server", server);
 		body.addProperty("p_name", name);
 		body.addProperty("p_version", ZadrinthClient.version());
 		try {
+			if (v2Available) {
+				body.add("p_cosmetics", outfit);
+				try {
+					rpc("zadrinth_heartbeat_v2", body);
+					return;
+				} catch (MissingFunctionException e) {
+					markV1Only();
+					body.remove("p_cosmetics");
+				}
+			}
 			rpc("zadrinth_heartbeat", body);
 		} catch (Exception e) {
 			ZadrinthClient.LOGGER.warn("Falha ao avisar presença: {}", e.toString());
+		}
+	}
+
+	private static void markV1Only() {
+		if (v2Available) {
+			v2Available = false;
+			ZadrinthClient.LOGGER.warn("O Supabase ainda não tem as funções de cosméticos (_v2): "
+					+ "rode de novo o docs/supabase.sql. O TAB continua funcionando.");
 		}
 	}
 
@@ -155,17 +196,36 @@ public final class Presence {
 		for (String name : names) array.add(new com.google.gson.JsonPrimitive(name));
 		body.add("p_names", array);
 		try {
-			String response = rpc("zadrinth_online", body);
+			String response = null;
+			if (v2Available) {
+				try {
+					response = rpc("zadrinth_online_v2", body);
+				} catch (MissingFunctionException e) {
+					markV1Only();
+				}
+			}
+			if (response == null) response = rpc("zadrinth_online", body);
 			JsonElement parsed = new JsonParser().parse(response);
 			Set<String> result = new HashSet<>();
+			Map<String, Loadout> outfits = new HashMap<>();
 			if (parsed.isJsonArray()) {
+				//v1: só os nomes
 				for (JsonElement element : parsed.getAsJsonArray()) {
 					if (element.isJsonPrimitive()) result.add(element.getAsString().toLowerCase(Locale.ROOT));
+				}
+			} else if (parsed.isJsonObject()) {
+				//v2: { "nome": { cosméticos } }
+				for (Map.Entry<String, JsonElement> entry : parsed.getAsJsonObject().entrySet()) {
+					String player = entry.getKey().toLowerCase(Locale.ROOT);
+					result.add(player);
+					Loadout loadout = Loadout.fromJson(entry.getValue());
+					if (!loadout.isEmpty()) outfits.put(player, loadout);
 				}
 			}
 			//Só aplica se ainda estivermos no mesmo servidor
 			if (server.equals(currentServer)) {
 				online = Collections.unmodifiableSet(result);
+				cosmetics = Collections.unmodifiableMap(outfits);
 			}
 		} catch (Exception e) {
 			ZadrinthClient.LOGGER.warn("Falha ao buscar jogadores do Zadrinth: {}", e.toString());
@@ -201,7 +261,15 @@ public final class Presence {
 			}
 		}
 		connection.disconnect();
+		//PostgREST responde 404 (PGRST202) quando a função não existe
+		if (code == 404 || (code >= 400 && text.contains("PGRST202"))) throw new MissingFunctionException(function);
 		if (code >= 400) throw new IllegalStateException("HTTP " + code + ": " + text);
 		return text;
+	}
+
+	private static final class MissingFunctionException extends Exception {
+		MissingFunctionException(String function) {
+			super("função " + function + " não existe no Supabase");
+		}
 	}
 }

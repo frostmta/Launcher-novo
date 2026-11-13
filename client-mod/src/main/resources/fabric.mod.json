@@ -3,7 +3,7 @@
   "id": "zadrinth-client",
   "version": "${version}",
   "name": "Zadrinth Client",
-  "description": "Mods de PvP do Zadrinth Client: ToggleSprint/ToggleSneak, editor de HUD e ícone no TAB para quem usa o client.",
+  "description": "Zadrinth Client: ToggleSprint/ToggleSneak, editor de HUD, ícone no TAB e cosméticos (capas com física, asas e bandanas) sincronizados entre os jogadores.",
   "authors": ["frostmta"],
   "contact": {
     "sources": "https://github.com/frostmta/Launcher-novo"
