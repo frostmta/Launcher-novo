@@ -1644,7 +1644,7 @@
     <string name="wardrobe_offline_only">As capas e skins do Armário funcionam em contas offline. Contas online usam a skin e as capas oficiais — gerencie em Contas.</string>
     <string name="wardrobe_no_account">Adicione uma conta para usar o Armário.</string>
     <string name="wardrobe_open_accounts">Abrir contas</string>
-    <string name="wardrobe_error_title">Não foi possível importar a imagem</string>
+    <string name="wardrobe_error_title">Não deu certo</string>
     <string name="wardrobe_error_cape_size">A capa precisa ser um PNG de 64×32 (ou HD até 1024×512), 22×17 ou 46×22.</string>
     <string name="wardrobe_error_skin_size">A skin precisa ser um PNG de 64×64 ou 64×32.</string>
     <string name="wardrobe_error_too_big">O arquivo é grande demais (máx. 8 MB).</string>
@@ -1659,4 +1659,10 @@
     <string name="wardrobe_cape_dourada">Dourada</string>
     <string name="wardrobe_cape_obsidiana">Obsidiana</string>
     <string name="wardrobe_cape_gelo">Gelo</string>
+    <!-- Zadrinth: official capes in the Wardrobe -->
+    <string name="wardrobe_tab_official">Oficiais</string>
+    <string name="wardrobe_tab_zadrinth">Zadrinth</string>
+    <string name="wardrobe_loading_capes">Carregando capas…</string>
+    <string name="wardrobe_official_source">Lista de capas oficiais da API pública do MineSkin. As texturas são baixadas dos servidores da Mojang e ficam salvas no aparelho para funcionar offline.</string>
+    <string name="wardrobe_error_download">Não foi possível baixar esta capa. Confira sua internet e tente de novo.</string>
 </resources>

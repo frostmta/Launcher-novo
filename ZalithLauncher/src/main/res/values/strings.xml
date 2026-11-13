@@ -3195,7 +3195,7 @@
     <string name="wardrobe_offline_only">Wardrobe capes and skins work with offline accounts. Online accounts keep their official skin and capes — manage them in Accounts.</string>
     <string name="wardrobe_no_account">Add an account to use the wardrobe.</string>
     <string name="wardrobe_open_accounts">Open accounts</string>
-    <string name="wardrobe_error_title">Couldn\'t import the image</string>
+    <string name="wardrobe_error_title">Something went wrong</string>
     <string name="wardrobe_error_cape_size">The cape must be a PNG of 64×32 (or HD up to 1024×512), 22×17 or 46×22.</string>
     <string name="wardrobe_error_skin_size">The skin must be a 64×64 or 64×32 PNG.</string>
     <string name="wardrobe_error_too_big">The file is too large (8 MB max).</string>
@@ -3210,4 +3210,10 @@
     <string name="wardrobe_cape_dourada">Golden</string>
     <string name="wardrobe_cape_obsidiana">Obsidian</string>
     <string name="wardrobe_cape_gelo">Ice</string>
+    <!-- Zadrinth: official capes in the Wardrobe -->
+    <string name="wardrobe_tab_official">Official</string>
+    <string name="wardrobe_tab_zadrinth">Zadrinth</string>
+    <string name="wardrobe_loading_capes">Loading capes…</string>
+    <string name="wardrobe_official_source">Official cape list from the public MineSkin API. The textures are downloaded from Mojang\'s servers and saved on your device to work offline.</string>
+    <string name="wardrobe_error_download">Couldn\'t download this cape. Check your internet connection and try again.</string>
 </resources>
