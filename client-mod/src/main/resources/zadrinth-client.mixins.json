@@ -4,6 +4,7 @@
   "package": "io.github.frostmta.zadrinth.client.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "GameMenuScreenMixin",
     "GameOptionsMixin",
     "InGameHudMixin",
     "KeyBindingAccessor",
