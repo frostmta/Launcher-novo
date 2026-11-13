@@ -1,0 +1,37 @@
+{
+  "_comment": "Servidores em destaque do Zadrinth Client. Para adicionar um servidor, copie um bloco e troque os dados. premium = só aceita conta original (Microsoft).",
+  "servers": [
+    {
+      "id": "mush",
+      "name": "Mush",
+      "address": "jogar.mush.com.br",
+      "region": "BR",
+      "tags": ["BedWars", "SkyWars", "PvP"],
+      "premium": false
+    },
+    {
+      "id": "hylex",
+      "name": "Hylex",
+      "address": "hylex.gg",
+      "region": "BR",
+      "tags": ["BedWars", "SkyWars", "Duels"],
+      "premium": false
+    },
+    {
+      "id": "gladmc",
+      "name": "GladMC",
+      "address": "jogar.gladmc.com",
+      "region": "BR",
+      "tags": ["BedWars", "PvP", "Practice"],
+      "premium": false
+    },
+    {
+      "id": "hypixel",
+      "name": "Hypixel",
+      "address": "mc.hypixel.net",
+      "region": "US",
+      "tags": ["BedWars", "SkyWars", "Duels"],
+      "premium": true
+    }
+  ]
+}

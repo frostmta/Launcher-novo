@@ -72,10 +72,36 @@ import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthPlayIconButton
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthSecondaryButton
 import com.movtery.zalithlauncher.ui.theme.modrinth.ModrinthTheme
 import com.movtery.zalithlauncher.viewmodel.ScreenBackStackViewModel
+import com.movtery.zalithlauncher.ui.theme.zadrinth.ZadrinthHeroBackground
+import com.movtery.zalithlauncher.ui.theme.zadrinth.ZadrinthGlass
+import com.movtery.zalithlauncher.ui.theme.zadrinth.GlassSurface
+import com.movtery.zalithlauncher.ui.theme.modrinth.ZadrinthBrandGradient
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.servers.rememberQuickJoinVersion
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.servers.rememberQuickJoin
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.servers.rememberFeaturedServers
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.servers.ServerStatusLine
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.servers.ServerFavicon
+import com.movtery.zalithlauncher.game.servers.FeaturedServerStatus
+import com.movtery.zalithlauncher.game.servers.FeaturedServer
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.border
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.RepeatMode
 
 /**
- * Tela Início no estilo do SKlauncher: saudação, "Jogar rápido" com a
- * instância selecionada, instâncias recentes e o painel de Novidades.
+ * Tela Início do Zadrinth Client: herói animado com o botão JOGAR, faixa de
+ * servidores (entrar rápido), instâncias recentes e o painel de Novidades.
  */
 @Composable
 fun ZadrinthHomeScreen(
@@ -85,6 +111,8 @@ fun ZadrinthHomeScreen(
     onOpenLibrary: () -> Unit,
     onCreateInstance: () -> Unit,
     onOpenLink: (String) -> Unit,
+    onJoinServer: (Version, FeaturedServer) -> Unit,
+    onOpenServers: () -> Unit,
 ) {
     BaseScreen(
         screenKey = NormalNavKey.LauncherMain,
@@ -103,7 +131,9 @@ fun ZadrinthHomeScreen(
                     onPlayInstance = onPlayInstance,
                     onOpenInstance = onOpenInstance,
                     onOpenLibrary = onOpenLibrary,
-                    onCreateInstance = onCreateInstance
+                    onCreateInstance = onCreateInstance,
+                    onJoinServer = onJoinServer,
+                    onOpenServers = onOpenServers
                 )
                 MinecraftNewsPanel(
                     modifier = Modifier
@@ -123,18 +153,24 @@ private fun HomeMain(
     onOpenInstance: (Version) -> Unit,
     onOpenLibrary: () -> Unit,
     onCreateInstance: () -> Unit,
+    onJoinServer: (Version, FeaturedServer) -> Unit,
+    onOpenServers: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colors = ModrinthTheme.colors
     val versions by VersionsManager.versions.collectAsStateWithLifecycle()
-    val currentVersion by VersionsManager.currentVersion.collectAsStateWithLifecycle()
     val stats by InstanceStatsStore.stats.collectAsStateWithLifecycle()
     val account by AccountsManager.currentAccountFlow.collectAsStateWithLifecycle()
 
-    val recent = remember(versions, stats) {
-        versions.filter { it.isValid() }.sortedByRecent(stats).take(4)
-    }
-    val quickPlay = currentVersion?.takeIf { it.isValid() } ?: recent.firstOrNull()
+    val validVersions = remember(versions) { versions.filter { it.isValid() } }
+    val recent = remember(validVersions, stats) { validVersions.sortedByRecent(stats).take(4) }
+    val quickPlay = rememberQuickJoinVersion()
+
+    val (servers, serverStatus) = rememberFeaturedServers()
+    val joinServer = rememberQuickJoin(
+        version = quickPlay,
+        onJoin = onJoinServer,
+        onCreateInstance = onCreateInstance
+    )
 
     Column(
         modifier = modifier
@@ -142,33 +178,24 @@ private fun HomeMain(
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        Column {
-            Text(
-                text = stringResource(
-                    R.string.home_greeting,
-                    account?.username ?: stringResource(R.string.home_greeting_default_name)
-                ),
-                style = MaterialTheme.typography.headlineSmall,
-                color = colors.textPrimary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-            Text(
-                text = stringResource(R.string.home_subtitle),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.textSecondary
+        HomeHero(
+            modifier = Modifier.fillMaxWidth(),
+            playerName = account?.username ?: stringResource(R.string.home_greeting_default_name),
+            version = quickPlay,
+            versions = validVersions,
+            onPlay = { quickPlay?.let(onPlayInstance) ?: onCreateInstance() },
+            onSelectVersion = { VersionsManager.saveVersion(it) }
+        )
+
+        if (servers.isNotEmpty()) {
+            ServerStrip(
+                modifier = Modifier.fillMaxWidth(),
+                servers = servers,
+                status = serverStatus,
+                onJoin = joinServer,
+                onOpenServers = onOpenServers
             )
         }
-
-        SectionTitle(text = stringResource(R.string.home_quick_play))
-        QuickPlayCard(
-            version = quickPlay,
-            stats = quickPlay?.let { stats[it.getVersionName()] },
-            onPlay = { quickPlay?.let(onPlayInstance) },
-            onOpen = { quickPlay?.let(onOpenInstance) },
-            onChange = onOpenLibrary,
-            onCreateInstance = onCreateInstance
-        )
 
         if (recent.isNotEmpty()) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -211,126 +238,239 @@ private fun SectionTitle(
     )
 }
 
+private val HeroShape = RoundedCornerShape(18.dp)
+
+/**
+ * Herói da tela inicial: céu animado, saudação e o botão grande JOGAR
+ * (com a seta para trocar de instância).
+ */
 @Composable
-private fun QuickPlayCard(
+private fun HomeHero(
+    playerName: String,
     version: Version?,
-    stats: InstanceStats?,
+    versions: List<Version>,
     onPlay: () -> Unit,
-    onOpen: () -> Unit,
-    onChange: () -> Unit,
-    onCreateInstance: () -> Unit,
+    onSelectVersion: (Version) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .height(220.dp)
+            .clip(HeroShape)
+            .border(1.dp, ZadrinthGlass.Border, HeroShape)
+    ) {
+        ZadrinthHeroBackground(modifier = Modifier.matchParentSize())
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            Text(
+                text = stringResource(R.string.home_hero_brand),
+                style = MaterialTheme.typography.labelMedium,
+                letterSpacing = 3.sp,
+                color = Color.White.copy(alpha = 0.65f)
+            )
+            Text(
+                text = stringResource(R.string.home_greeting, playerName),
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                HeroPlayButton(
+                    version = version,
+                    versions = versions,
+                    onPlay = onPlay,
+                    onSelectVersion = onSelectVersion
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HeroPlayButton(
+    version: Version?,
+    versions: List<Version>,
+    onPlay: () -> Unit,
+    onSelectVersion: (Version) -> Unit,
 ) {
     val colors = ModrinthTheme.colors
-    ModrinthCard(modifier = Modifier.fillMaxWidth()) {
-        if (version == null) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
+    val shape = RoundedCornerShape(16.dp)
+    var menuOpen by remember { mutableStateOf(false) }
+
+    //Brilho pulsando atrás do botão
+    val glow by rememberInfiniteTransition(label = "PlayGlow").animateFloat(
+        initialValue = 0.25f,
+        targetValue = 0.6f,
+        animationSpec = infiniteRepeatable(tween(1_600), RepeatMode.Reverse),
+        label = "PlayGlowAlpha"
+    )
+
+    Box {
+        Row(
+            modifier = Modifier
+                .drawBehind {
+                    val spread = 10.dp.toPx()
+                    drawRoundRect(
+                        brush = ZadrinthBrandGradient,
+                        topLeft = androidx.compose.ui.geometry.Offset(-spread, -spread / 2),
+                        size = androidx.compose.ui.geometry.Size(size.width + spread * 2, size.height + spread),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(24.dp.toPx()),
+                        alpha = glow * 0.35f
+                    )
+                }
+                .clip(shape)
+                .background(colors.brandBrush)
+                .height(IntrinsicSize.Min),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(
+                modifier = Modifier
+                    .clickable(role = Role.Button, onClick = onPlay)
+                    .padding(horizontal = 30.dp, vertical = 10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    modifier = Modifier.weight(1f),
-                    text = stringResource(R.string.home_no_instances),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.textSecondary
+                    text = if (version != null) stringResource(R.string.home_hero_play)
+                    else stringResource(R.string.home_hero_create).uppercase(),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    letterSpacing = 3.sp,
+                    color = colors.onBrandBrush
                 )
-                ModrinthBrandButton(onClick = onCreateInstance) {
-                    Icon(
-                        modifier = Modifier.size(18.dp),
-                        painter = painterResource(R.drawable.ic_add),
-                        contentDescription = null
-                    )
-                    Spacer(Modifier.width(6.dp))
-                    Text(text = stringResource(R.string.nav_create_instance))
-                }
+                Text(
+                    text = version?.getVersionName() ?: stringResource(R.string.home_no_instances),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = colors.onBrandBrush.copy(alpha = 0.75f),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.widthIn(max = 200.dp)
+                )
             }
-        } else {
-            Row(
-                modifier = Modifier.padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                //Botão grande "Jogar" com o degradê da marca
-                val playShape = RoundedCornerShape(14.dp)
-                Row(
-                    modifier = Modifier
-                        .widthIn(min = 180.dp, max = 260.dp)
-                        .heightIn(min = 60.dp)
-                        .clip(playShape)
-                        .background(colors.brandBrush)
-                        .clickable(role = Role.Button, onClick = onPlay)
-                        .padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        modifier = Modifier.size(26.dp),
-                        painter = painterResource(R.drawable.ic_play_arrow_filled),
-                        contentDescription = null,
-                        tint = colors.onBrandBrush
-                    )
-                    Spacer(Modifier.width(10.dp))
-                    Column {
-                        Text(
-                            text = stringResource(R.string.modrinth_play),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = colors.onBrandBrush
-                        )
-                        Text(
-                            text = version.getVersionName(),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = colors.onBrandBrush.copy(alpha = 0.8f),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
-                }
-
-                Spacer(Modifier.width(14.dp))
+            if (version != null && versions.size > 1) {
                 Box(
                     modifier = Modifier
+                        .fillMaxHeight()
                         .width(1.dp)
-                        .height(48.dp)
-                        .background(colors.border)
+                        .background(colors.onBrandBrush.copy(alpha = 0.2f))
                 )
-                Spacer(Modifier.width(14.dp))
-
-                Row(
+                Box(
                     modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(10.dp))
-                        .clickable(onClick = onOpen)
-                        .padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxHeight()
+                        .clickable(role = Role.Button) { menuOpen = true }
+                        .padding(horizontal = 10.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    InstanceIconBox(version = version, size = 40.dp)
-                    Spacer(Modifier.width(10.dp))
-                    Column {
+                    Icon(
+                        modifier = Modifier.size(24.dp),
+                        painter = painterResource(R.drawable.ic_arrow_drop_down_rounded),
+                        contentDescription = stringResource(R.string.home_hero_change),
+                        tint = colors.onBrandBrush
+                    )
+                }
+            }
+        }
+        DropdownMenu(
+            expanded = menuOpen,
+            onDismissRequest = { menuOpen = false }
+        ) {
+            versions.forEach { item ->
+                DropdownMenuItem(
+                    text = {
                         Text(
-                            text = stringResource(R.string.home_selected_instance),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.textSecondary
+                            text = item.getVersionName(),
+                            fontWeight = if (item == version) FontWeight.Bold else FontWeight.Normal
+                        )
+                    },
+                    leadingIcon = { InstanceIconBox(version = item, size = 24.dp) },
+                    onClick = {
+                        menuOpen = false
+                        onSelectVersion(item)
+                    }
+                )
+            }
+        }
+    }
+}
+
+/** Faixa de servidores logo abaixo do herói: um toque entra direto no servidor. */
+@Composable
+private fun ServerStrip(
+    servers: List<FeaturedServer>,
+    status: Map<String, FeaturedServerStatus>,
+    onJoin: (FeaturedServer) -> Unit,
+    onOpenServers: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val colors = ModrinthTheme.colors
+    GlassSurface(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(modifier = Modifier.padding(vertical = 10.dp)) {
+            Row(
+                modifier = Modifier.padding(horizontal = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = stringResource(R.string.servers_featured),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = colors.textPrimary
+                    )
+                    Text(
+                        text = stringResource(R.string.servers_tap_to_join),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = colors.textSecondary
+                    )
+                }
+                TextButton(onClick = onOpenServers) {
+                    Text(text = stringResource(R.string.servers_see_all))
+                }
+            }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                servers.forEach { server ->
+                    val online = status[server.id] as? FeaturedServerStatus.Online
+                    Column(
+                        modifier = Modifier
+                            .width(92.dp)
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(role = Role.Button) { onJoin(server) }
+                            .padding(vertical = 8.dp, horizontal = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        ServerFavicon(
+                            name = server.name,
+                            favicon = online?.favicon,
+                            size = 48.dp
                         )
                         Text(
-                            text = version.getVersionName(),
-                            style = MaterialTheme.typography.titleSmall,
+                            text = server.name,
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.SemiBold,
                             color = colors.textPrimary,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
                         )
-                        Text(
-                            text = stringResource(
-                                R.string.instance_last_played,
-                                instanceLastPlayedText(stats?.lastPlayed ?: 0L)
-                            ),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = colors.textSecondary,
-                            maxLines = 1
-                        )
+                        ServerStatusLine(status = status[server.id], showPing = false)
                     }
-                }
-
-                Spacer(Modifier.width(8.dp))
-                ModrinthSecondaryButton(onClick = onChange) {
-                    Text(text = stringResource(R.string.home_change_instance))
                 }
             }
         }

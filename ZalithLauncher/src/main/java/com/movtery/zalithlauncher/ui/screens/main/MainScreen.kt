@@ -101,6 +101,8 @@ import com.movtery.zalithlauncher.ui.screens.content.DownloadScreen
 import com.movtery.zalithlauncher.ui.screens.content.FileSelectorScreen
 import com.movtery.zalithlauncher.ui.screens.content.LibraryScreen
 import com.movtery.zalithlauncher.ui.screens.content.zadrinth.WardrobeScreen
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.servers.ServersScreen
+import com.movtery.zalithlauncher.game.servers.FeaturedServer
 import com.movtery.zalithlauncher.ui.screens.content.LicenseScreen
 import com.movtery.zalithlauncher.ui.screens.content.LogViewScreen
 import com.movtery.zalithlauncher.ui.screens.content.MultiplayerScreen
@@ -265,6 +267,7 @@ fun MainScreen(
     val showContentHeader = !inLauncherScreen &&
             mainScreenKey !is NormalNavKey.Library &&
             mainScreenKey !is NormalNavKey.Wardrobe &&
+            mainScreenKey !is NormalNavKey.Servers &&
             mainScreenKey !is NormalNavKey.Instance &&
             //Explorar e as configurações têm o próprio cabeçalho (abas/menu lateral)
             mainScreenKey !is NestedNavKey.Download &&
@@ -317,6 +320,11 @@ fun MainScreen(
                             MainNavDestination.EXPLORE -> {
                                 if (mainScreenKey !is NestedNavKey.Download) {
                                     navigator.downloadTab(screenBackStackModel.downloadModPackScreen)
+                                }
+                            }
+                            MainNavDestination.SERVERS -> {
+                                if (mainScreenKey !is NormalNavKey.Servers) {
+                                    navigator.topLevel(NormalNavKey.Servers)
                                 }
                             }
                             MainNavDestination.WARDROBE -> {
@@ -588,6 +596,11 @@ private fun NavigationUI(
         val openLink: (String) -> Unit = { url ->
             eventViewModel.sendEvent(EventViewModel.Event.OpenLink(url))
         }
+        /** Entrar rápido: abre o Minecraft já conectando no servidor (quick play) */
+        val joinServer: (Version, FeaturedServer) -> Unit = { version, server ->
+            VersionsManager.saveVersion(version)
+            eventViewModel.sendEvent(EventViewModel.Event.Launch.PlayServer(version, server.address))
+        }
 
         NestedNavDisplay(
             ownerKey = screenBackStackModel.mainScreen,
@@ -606,7 +619,17 @@ private fun NavigationUI(
                         onOpenInstance = { version -> navigator.openInstance(version) },
                         onOpenLibrary = { navigator.topLevel(NormalNavKey.Library) },
                         onCreateInstance = { navigator.createInstance() },
-                        onOpenLink = openLink
+                        onOpenLink = openLink,
+                        onJoinServer = joinServer,
+                        onOpenServers = { navigator.topLevel(NormalNavKey.Servers) }
+                    )
+                }
+                entry<NormalNavKey.Servers> {
+                    ServersScreen(
+                        backStackViewModel = screenBackStackModel,
+                        onJoin = joinServer,
+                        onCreateInstance = { navigator.createInstance() },
+                        onChangeInstance = { navigator.topLevel(NormalNavKey.Library) }
                     )
                 }
                 entry<NormalNavKey.Library> {

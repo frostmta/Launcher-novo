@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="docs/zadrinth-icon.png" alt="Zadrinth Launcher icon" width="128"/>
+<img src="docs/zadrinth-icon.png" alt="Zadrinth Client icon" width="128"/>
 
-# Zadrinth Launcher
+# Zadrinth Client
 
 **A Minecraft: Java Edition launcher for Android, inspired by the Modrinth App.**
 
@@ -15,20 +15,22 @@
 </div>
 
 > [!IMPORTANT]
-> Zadrinth Launcher is an **independent, unofficial** project. It is **not affiliated** with Modrinth (Rinth, Inc.), the official Zalith Launcher, Mojang or Microsoft. "Modrinth" and "Minecraft" are trademarks of their respective owners.
+> Zadrinth Client is an **independent, unofficial** project. It is **not affiliated** with Modrinth (Rinth, Inc.), the official Zalith Launcher, Mojang or Microsoft. "Modrinth" and "Minecraft" are trademarks of their respective owners.
 >
 > This app is an **unofficial modified version** of [Zalith Launcher 2](https://github.com/ZalithLauncher/ZalithLauncher2). Please report issues **in this repository**, not to Zalith.
 
 ## ✨ About
 
-Zadrinth Launcher brings the look and flow of the **Modrinth App** (desktop) to Android phones, while keeping the game engine from Zalith Launcher 2 / PojavLauncher (LWJGL, renderers, on-screen controls and official Microsoft login).
+Zadrinth Client is a Minecraft Java client for phones focused on **competitive PvP, BedWars and SkyWars**, with a dark glass look, quick server join and (coming soon) in-game PvP mods, while keeping the game engine from Zalith Launcher 2 / PojavLauncher (LWJGL, renderers, on-screen controls and official Microsoft login).
 
 Open the launcher, pick an instance and play, with Modrinth mods, modpacks, resource packs and shaders installed right from the app.
 
 ## 🎨 Look
 
 - Dark theme with a **blue → violet → pink** gradient and purple-tinted backgrounds
-- Floating side bar: your account, **Home**, **Library**, **Explore**, **Wardrobe**, **Multiplayer**, recent instances and **Settings**
+- Floating side bar: your account, **Home**, **Library**, **Servers**, **Explore**, **Wardrobe**, **Multiplayer**, recent instances and **Settings**
+- **Home** with an animated sky, a big **PLAY** button and a server strip: one tap opens Minecraft straight into the server
+- Featured **Servers** (Mush, Hylex, GladMC, Hypixel) with live icon, online players and ping
 - **Wardrobe** with a 3D character preview, official Minecraft capes, original Zadrinth capes and cape/skin import for offline accounts
 - **Explore** with top tabs and Modrinth-style result cards; settings with a side menu
 - Rounded cards with thin borders and a gradient **Play** button

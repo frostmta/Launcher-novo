@@ -1344,4 +1344,28 @@
     <string name="wardrobe_loading_capes">Carregando capas…</string>
     <string name="wardrobe_official_source">Lista de capas oficiais da API pública do MineSkin. As texturas são baixadas dos servidores da Mojang e ficam salvas no aparelho para funcionar offline.</string>
     <string name="wardrobe_error_download">Não foi possível baixar esta capa. Confira sua internet e tente de novo.</string>
+    <!-- Zadrinth Client: servers (quick join) and new home -->
+    <string name="nav_servers">Servidores</string>
+    <string name="servers_title">Servidores</string>
+    <string name="servers_subtitle">Entre direto no servidor, sem passar pela tela inicial do Minecraft.</string>
+    <string name="servers_featured">Servidores em destaque</string>
+    <string name="servers_join">Entrar</string>
+    <string name="servers_play_with">Jogar com %1$s</string>
+    <string name="servers_online">%1$s online</string>
+    <string name="servers_ping">%1$d ms</string>
+    <string name="servers_offline">Offline</string>
+    <string name="servers_checking">Verificando…</string>
+    <string name="servers_premium">Conta original</string>
+    <string name="servers_premium_title">%1$s exige conta original</string>
+    <string name="servers_premium_text">Este servidor só aceita contas Microsoft (originais). Com conta offline, você vai ser desconectado assim que entrar.</string>
+    <string name="servers_join_anyway">Entrar mesmo assim</string>
+    <string name="servers_filter_all">Todos</string>
+    <string name="servers_no_instance">Crie uma instância para entrar nos servidores.</string>
+    <string name="servers_see_all">Ver todos</string>
+    <string name="servers_tap_to_join">Toque num servidor para entrar</string>
+    <string name="home_hero_brand">ZADRINTH CLIENT</string>
+    <string name="home_hero_play">JOGAR</string>
+    <string name="home_hero_ready">Pronto para jogar</string>
+    <string name="home_hero_change">Trocar instância</string>
+    <string name="home_hero_create">Criar instância</string>
 </resources>

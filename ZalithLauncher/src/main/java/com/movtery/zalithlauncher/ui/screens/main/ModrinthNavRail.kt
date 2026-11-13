@@ -74,6 +74,7 @@ enum class MainNavDestination(
 ) {
     HOME(R.string.nav_home, R.drawable.ic_dashboard_outlined),
     LIBRARY(R.string.nav_library, R.drawable.ic_style_outlined),
+    SERVERS(R.string.nav_servers, R.drawable.ic_dns_outlined),
     EXPLORE(R.string.nav_explore, R.drawable.ic_package_2_outlined),
     WARDROBE(R.string.nav_wardrobe, R.drawable.ic_checkroom),
     MULTIPLAYER(R.string.nav_multiplayer, R.drawable.ic_public),
@@ -94,6 +95,7 @@ fun TitledNavKey?.toMainNavDestination(): MainNavDestination? = when (this) {
     is NestedNavKey.VersionExport -> MainNavDestination.LIBRARY
     is NormalNavKey.Multiplayer -> MainNavDestination.MULTIPLAYER
     is NormalNavKey.Wardrobe -> MainNavDestination.WARDROBE
+    is NormalNavKey.Servers -> MainNavDestination.SERVERS
     is NestedNavKey.Settings, is NormalNavKey.License -> MainNavDestination.SETTINGS
     else -> null
 }
@@ -145,6 +147,7 @@ fun ZadrinthSidebar(
             listOf(
                 MainNavDestination.HOME,
                 MainNavDestination.LIBRARY,
+                MainNavDestination.SERVERS,
                 MainNavDestination.EXPLORE,
                 MainNavDestination.WARDROBE,
                 MainNavDestination.MULTIPLAYER
