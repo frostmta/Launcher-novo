@@ -62,6 +62,59 @@ public final class Ui {
 		return builder.toString();
 	}
 
+	/** Retângulo com cantos arredondados (raio de 2 px, estilo pixel). */
+	public static void round(int x, int y, int w, int h, int color) {
+		if (w < 4 || h < 4) {
+			DrawableHelper.fill(x, y, x + w, y + h, color);
+			return;
+		}
+		DrawableHelper.fill(x + 2, y, x + w - 2, y + 1, color);
+		DrawableHelper.fill(x + 1, y + 1, x + w - 1, y + 2, color);
+		DrawableHelper.fill(x, y + 2, x + w, y + h - 2, color);
+		DrawableHelper.fill(x + 1, y + h - 2, x + w - 1, y + h - 1, color);
+		DrawableHelper.fill(x + 2, y + h - 1, x + w - 2, y + h, color);
+	}
+
+	/** Contorno de 1 px com cantos arredondados. */
+	public static void roundOutline(int x, int y, int w, int h, int color) {
+		DrawableHelper.fill(x + 2, y, x + w - 2, y + 1, color);
+		DrawableHelper.fill(x + 2, y + h - 1, x + w - 2, y + h, color);
+		DrawableHelper.fill(x, y + 2, x + 1, y + h - 2, color);
+		DrawableHelper.fill(x + w - 1, y + 2, x + w, y + h - 2, color);
+		DrawableHelper.fill(x + 1, y + 1, x + 2, y + 2, color);
+		DrawableHelper.fill(x + w - 2, y + 1, x + w - 1, y + 2, color);
+		DrawableHelper.fill(x + 1, y + h - 2, x + 2, y + h - 1, color);
+		DrawableHelper.fill(x + w - 2, y + h - 2, x + w - 1, y + h - 1, color);
+	}
+
+	/** Cartão: fundo + contorno arredondados. */
+	public static void card(int x, int y, int w, int h, int fill, int outline) {
+		DrawableHelper.fill(x + 2, y + 1, x + w - 2, y + 2, fill);
+		DrawableHelper.fill(x + 1, y + 2, x + w - 1, y + h - 2, fill);
+		DrawableHelper.fill(x + 2, y + h - 2, x + w - 2, y + h - 1, fill);
+		roundOutline(x, y, w, h, outline);
+	}
+
+	/** Ícone branco do atlas, tingido com a cor. */
+	public static void icon(io.github.frostmta.zadrinth.client.module.Icon icon, int x, int y, int size, int argb) {
+		if (!Textures.bind("textures/icons.png", true)) return;
+		com.mojang.blaze3d.platform.GlStateManager.enableBlend();
+		com.mojang.blaze3d.platform.GlStateManager.blendFunc(770, 771);
+		com.mojang.blaze3d.platform.GlStateManager.color(((argb >> 16) & 0xFF) / 255f, ((argb >> 8) & 0xFF) / 255f,
+				(argb & 0xFF) / 255f, ((argb >>> 24) & 0xFF) / 255f);
+		DrawableHelper.drawTexture(x, y, (float) icon.u(), (float) icon.v(), 32, 32, size, size, 256f, 256f);
+		com.mojang.blaze3d.platform.GlStateManager.color(1f, 1f, 1f, 1f);
+	}
+
+	/** O símbolo do Zadrinth Client. */
+	public static void logo(int x, int y, int size) {
+		if (!Textures.bind("textures/logo.png", true)) return;
+		com.mojang.blaze3d.platform.GlStateManager.enableBlend();
+		com.mojang.blaze3d.platform.GlStateManager.blendFunc(770, 771);
+		com.mojang.blaze3d.platform.GlStateManager.color(1f, 1f, 1f, 1f);
+		DrawableHelper.drawTexture(x, y, 0f, 0f, 256, 256, size, size, 256f, 256f);
+	}
+
 	public static boolean inside(int mouseX, int mouseY, int x, int y, int w, int h) {
 		return mouseX >= x && mouseY >= y && mouseX < x + w && mouseY < y + h;
 	}

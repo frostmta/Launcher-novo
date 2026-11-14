@@ -2,54 +2,53 @@ package io.github.frostmta.zadrinth.client.hud;
 
 import com.mojang.blaze3d.platform.GlStateManager;
 import io.github.frostmta.zadrinth.client.config.HudPosition;
+import io.github.frostmta.zadrinth.client.gui.HudEditorScreen;
+import io.github.frostmta.zadrinth.client.module.ModuleManager;
+import io.github.frostmta.zadrinth.client.module.hud.HudModule;
+import io.github.frostmta.zadrinth.client.module.impl.CrosshairModule;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.Window;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
-/** Lista de itens do HUD e o desenho deles na tela. */
+/** Desenha os módulos de HUD ligados (chamado no fim do HUD do jogo). */
 public final class HudManager {
-	private static final List<HudElement> ELEMENTS = Collections.unmodifiableList(Arrays.<HudElement>asList(
-			new ToggleSprintHud()
-	));
-
 	private HudManager() {
 	}
 
-	public static List<HudElement> elements() {
-		return ELEMENTS;
-	}
-
-	/** Chamado pelo InGameHudMixin no fim do HUD do jogo. */
 	public static void render(MinecraftClient client) {
-		if (client.player == null || client.options.debugEnabled) return;
-		if (client.currentScreen instanceof io.github.frostmta.zadrinth.client.gui.HudEditorScreen) return;
+		if (client.player == null) return;
 		Window window = new Window(client);
-		for (HudElement element : ELEMENTS) {
-			if (element.isEnabled()) {
-				draw(client, window, element, false);
+		CrosshairModule.render(window.getWidth(), window.getHeight());
+		if (client.currentScreen instanceof HudEditorScreen) return;
+		for (HudModule module : ModuleManager.hudModules()) {
+			if (!module.isEnabled()) continue;
+			//No F3 só o placar continua (como no jogo normal)
+			if (client.options.debugEnabled && module != ModuleManager.SCOREBOARD) continue;
+			try {
+				if (!module.shouldRender(client)) continue;
+				draw(client, window, module, false);
+			} catch (RuntimeException e) {
+				//um módulo com erro não pode derrubar o HUD
 			}
 		}
+		GlStateManager.color(1f, 1f, 1f, 1f);
 	}
 
-	public static void draw(MinecraftClient client, Window window, HudElement element, boolean editing) {
-		int[] box = bounds(client, window, element, editing);
-		HudPosition pos = element.position();
+	public static void draw(MinecraftClient client, Window window, HudModule module, boolean editing) {
+		int[] box = bounds(client, window, module, editing);
+		HudPosition pos = module.position();
 		GlStateManager.pushMatrix();
 		GlStateManager.translate((float) box[0], (float) box[1], 0f);
 		GlStateManager.scale(pos.scale, pos.scale, 1f);
 		GlStateManager.color(1f, 1f, 1f, 1f);
-		element.render(client, editing);
+		module.render(client, editing);
 		GlStateManager.popMatrix();
 	}
 
 	/** {x, y, largura, altura} já com escala, sempre dentro da tela. */
-	public static int[] bounds(MinecraftClient client, Window window, HudElement element, boolean editing) {
-		HudPosition pos = element.position();
-		int w = Math.round(element.width(client, editing) * pos.scale);
-		int h = Math.round(element.height(client, editing) * pos.scale);
+	public static int[] bounds(MinecraftClient client, Window window, HudModule module, boolean editing) {
+		HudPosition pos = module.position();
+		int w = Math.round(module.width(client, editing) * pos.scale);
+		int h = Math.round(module.height(client, editing) * pos.scale);
 		int screenW = window.getWidth();
 		int screenH = window.getHeight();
 		int x = Math.round(pos.x * screenW);

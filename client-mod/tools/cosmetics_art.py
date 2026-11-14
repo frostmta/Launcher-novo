@@ -65,6 +65,29 @@ def value_noise(w, h, scale, seed, octaves=4, persistence=0.5):
     return total / norm
 
 
+def periodic_noise(w, h, cells_x, cells_y, seed, octaves=3, persistence=0.55):
+    """Ruído que se repete nas bordas (para animações em loop)."""
+    rng = np.random.default_rng(seed)
+    total = np.zeros((h, w), np.float32)
+    amp, norm = 1.0, 0.0
+    for o in range(octaves):
+        cx, cy = cells_x * (2 ** o), cells_y * (2 ** o)
+        grid = rng.random((cy, cx)).astype(np.float32)
+        ys, xs = np.mgrid[0:h, 0:w].astype(np.float32)
+        gx, gy = xs / w * cx, ys / h * cy
+        x0, y0 = gx.astype(int), gy.astype(int)
+        fx, fy = gx - x0, gy - y0
+        fx = fx * fx * (3 - 2 * fx)
+        fy = fy * fy * (3 - 2 * fy)
+        x1, y1 = (x0 + 1) % cx, (y0 + 1) % cy
+        x0, y0 = x0 % cx, y0 % cy
+        a, b, c, d = grid[y0, x0], grid[y0, x1], grid[y1, x0], grid[y1, x1]
+        total += amp * lerp(lerp(a, b, fx), lerp(c, d, fx), fy)
+        norm += amp
+        amp *= persistence
+    return total / norm
+
+
 def to_img(rgb, alpha=None):
     rgb = np.clip(rgb, 0, 255).astype(np.uint8)
     if alpha is None:
@@ -635,15 +658,26 @@ def bandana_paisley():
     return paisley(img, 81, (255, 238, 225), (255, 255, 255))
 
 
+FLAME_FRAMES = 16
+
+
 def bandana_flames():
-    img = bandana_base('#0d0a10', '#050407')
-    img = bandana_tails(img, '#0d0a10', '#050407')
-    n = value_noise(BW, BH, 4, 82, 4, 0.6)
+    """Fogo animado: 16 quadros empilhados (288 x 64*16), em loop."""
+    P = 128
+    noise = periodic_noise(BW, P, 24, 8, 82, 3, 0.6)
+    frames = []
     yy = np.mgrid[0:BH, 0:BW][0].astype(np.float32)
-    band_t = np.where(yy < 24, (yy / 24), (yy - 24) / 40)
-    f = np.clip(band_t + (n - 0.5) * 0.7 - 0.25, 0, 1)
-    col = ramp([(0, '#5a0a00'), (0.4, '#e83a0c'), (0.75, '#ffb21e'), (1, '#fff3c0')], f)
-    return np.where((f > 0.15)[..., None], col, img)
+    band_t = np.where(yy < 24, yy / 24, (yy - 24) / 40)
+    for k in range(FLAME_FRAMES):
+        img = bandana_base('#0d0a10', '#050407')
+        img = bandana_tails(img, '#0d0a10', '#050407')
+        shift = k * P // FLAME_FRAMES
+        rows = (np.arange(BH) + shift) % P
+        n = noise[rows]
+        f = np.clip(band_t + (n - 0.5) * 0.75 - 0.22, 0, 1)
+        col = ramp([(0, '#5a0a00'), (0.4, '#e83a0c'), (0.75, '#ffb21e'), (1, '#fff3c0')], f)
+        frames.append(np.where((f > 0.15)[..., None], col, img))
+    return np.concatenate(frames, axis=0)
 
 
 def bandana_galaxy():

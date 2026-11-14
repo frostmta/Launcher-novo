@@ -20,10 +20,18 @@ public final class ToggleSprint {
 	private ToggleSprint() {
 	}
 
+	private static boolean active() {
+		return io.github.frostmta.zadrinth.client.module.ModuleManager.TOGGLE_SPRINT.isEnabled();
+	}
+
 	public static void tick(MinecraftClient client) {
 		GameOptions options = client.options;
 		if (options == null) return;
 		ZadrinthConfig config = ZadrinthConfig.get();
+		if (!active()) {
+			config.sneakToggled = false;
+			return;
+		}
 
 		boolean changed = false;
 		//wasPressed() consome cada toque; o jogo usa isPressed() (tecla segurada) para correr
@@ -45,7 +53,7 @@ public final class ToggleSprint {
 	/** Diz ao KeyBindingMixin se a tecla deve contar como apertada. */
 	public static boolean forcePressed(KeyBinding key) {
 		MinecraftClient client = MinecraftClient.getInstance();
-		if (client == null || client.options == null || client.player == null) return false;
+		if (client == null || client.options == null || client.player == null || !active()) return false;
 		ZadrinthConfig config = ZadrinthConfig.get();
 		if (key == client.options.sprintKey) {
 			return config.toggleSprintEnabled && config.sprintToggled;
@@ -58,6 +66,7 @@ public final class ToggleSprint {
 
 	/** Texto do HUD, igual ao do Lunar. Vazio quando não há nada para mostrar. */
 	public static String statusText(MinecraftClient client) {
+		if (!active()) return "";
 		ClientPlayerEntity player = client.player;
 		if (player == null) return "";
 		ZadrinthConfig config = ZadrinthConfig.get();

@@ -40,7 +40,24 @@ public final class ZadrinthClient implements ClientModInitializer {
 			}
 		}
 		ToggleSprint.tick(client);
+		io.github.frostmta.zadrinth.client.module.ModuleManager.tick(client);
+		io.github.frostmta.zadrinth.client.stats.CombatTracker.tick(client);
 		Presence.tick(client);
+		if (!titleSet) {
+			titleSet = true;
+			try {
+				org.lwjgl.opengl.Display.setTitle("Zadrinth Client " + version() + " (Minecraft 1.8.9)");
+			} catch (Throwable ignored) {
+				//alguns ambientes (celular) não têm título de janela
+			}
+		}
+	}
+
+	private static boolean titleSet;
+
+	/** Usar a tela inicial do Zadrinth no lugar da do Minecraft. */
+	public static boolean customTitleScreen() {
+		return true;
 	}
 
 	private static Properties loadBuildProperties() {
