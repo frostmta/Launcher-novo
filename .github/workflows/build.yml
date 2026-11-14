@@ -51,6 +51,13 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
           ls -la build/libs
+          echo "Alvos dos mixins no .jar final (devem estar em nomes intermediary):"
+          mkdir -p /tmp/modjar && unzip -qo build/libs/zadrinth-client-*.jar -d /tmp/modjar
+          unzip -l build/libs/zadrinth-client-*.jar | grep -iE "refmap|mixins.json" || true
+          for f in /tmp/modjar/io/github/frostmta/zadrinth/client/mixin/*.class; do
+            echo "== $(basename "$f")"
+            javap -v "$f" | grep -oE "(method_|field_|class_)[0-9]+[^ ]*|L?net/minecraft/[A-Za-z0-9_/$]+;?" | sort -u | head -20
+          done
 
       - name: Upload mod
         uses: actions/upload-artifact@v7
