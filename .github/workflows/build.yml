@@ -51,6 +51,22 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
           ls -la build/libs
+          echo "== Diagnóstico (temporário): tela inicial"
+          MCJAR=""
+          for j in $(find .gradle ~/.gradle -name "*.jar" 2>/dev/null | grep -v -e sources -e mappings); do
+            if unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/client/MinecraftClient.class"; then MCJAR="$j"; break; fi
+          done
+          if [ -n "$MCJAR" ]; then
+            P() { javap -c -p -classpath "$MCJAR" "$1" | sed -n "/ $2(/,/^$/p" | grep -E "ldc|getstatic|getfield|putfield|invoke" | head -${3:-40}; echo "-----"; }
+            P net.minecraft.client.MinecraftClient loadLogo 40
+            P net.minecraft.client.render.model.ModelPart preRender 30
+            javap -c -p -classpath "$MCJAR" net.minecraft.client.render.entity.model.BiPedModel | sed -n '/BiPedModel(float, float, int, int);/,/return/p' | grep -E "ldc|fconst|bipush|putfield|invoke|sipush" | head -60; echo "-----"
+            javap -c -p -classpath "$MCJAR" net.minecraft.client.render.entity.model.PlayerEntityModel | sed -n '/PlayerEntityModel(float, boolean);/,/return/p' | grep -E "ldc|fconst|putfield|invoke" | head -60; echo "-----"
+            P net.minecraft.client.texture.PlayerSkinProvider loadProfileSkin 30
+            unzip -l "$MCJAR" | grep -o "net/minecraft/client/texture/PlayerSkinProvider[^ ]*class" | while read c; do n=$(echo "$c" | sed 's#/#.#g; s#\.class$##'); echo "--- $n"; javap -p -classpath "$MCJAR" "$n" | head -12; done
+            javap -p -classpath "$MCJAR" net.minecraft.client.resource.DefaultResourcePack | head -20
+            javap -p -classpath "$MCJAR" net.minecraft.client.util.DefaultSkinHelper | head -12
+          fi
           echo "Alvos dos mixins no .jar final (devem estar em nomes intermediary):"
           mkdir -p /tmp/modjar && unzip -qo build/libs/zadrinth-client-*.jar -d /tmp/modjar
           unzip -l build/libs/zadrinth-client-*.jar | grep -iE "refmap|mixins.json" || true
