@@ -1689,4 +1689,7 @@
     <string name="home_hero_ready">Pronto para jogar</string>
     <string name="home_hero_change">Trocar instância</string>
     <string name="home_hero_create">Criar instância</string>
+    <!-- Zadrinth Client: loja de cosméticos e instalação do client -->
+    <string name="nav_shop">Loja</string>
+    <string name="shop_title">Loja de cosméticos</string>
 </resources>

@@ -53,6 +53,10 @@ sealed interface NormalNavKey : TitledNavKey {
     @Serializable data object Servers : NormalNavKey {
         @Contextual override val title: AndroidStringText = androidText(R.string.servers_title)
     }
+    /** Loja de cosméticos do Zadrinth Client */
+    @Serializable data object Shop : NormalNavKey {
+        @Contextual override val title: AndroidStringText = androidText(R.string.shop_title)
+    }
     /** Armário: capas e skin para contas offline */
     @Serializable data object Wardrobe : NormalNavKey {
         @Contextual override val title: AndroidStringText = androidText(R.string.wardrobe_title)

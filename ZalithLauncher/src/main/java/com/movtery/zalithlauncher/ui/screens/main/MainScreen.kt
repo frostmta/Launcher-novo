@@ -101,6 +101,7 @@ import com.movtery.zalithlauncher.ui.screens.content.DownloadScreen
 import com.movtery.zalithlauncher.ui.screens.content.FileSelectorScreen
 import com.movtery.zalithlauncher.ui.screens.content.LibraryScreen
 import com.movtery.zalithlauncher.ui.screens.content.zadrinth.WardrobeScreen
+import com.movtery.zalithlauncher.ui.screens.content.zadrinth.CosmeticShopScreen
 import com.movtery.zalithlauncher.ui.screens.content.zadrinth.servers.ServersScreen
 import com.movtery.zalithlauncher.game.servers.FeaturedServer
 import com.movtery.zalithlauncher.ui.screens.content.LicenseScreen
@@ -267,6 +268,7 @@ fun MainScreen(
     val showContentHeader = !inLauncherScreen &&
             mainScreenKey !is NormalNavKey.Library &&
             mainScreenKey !is NormalNavKey.Wardrobe &&
+            mainScreenKey !is NormalNavKey.Shop &&
             mainScreenKey !is NormalNavKey.Servers &&
             mainScreenKey !is NormalNavKey.Instance &&
             //Explorar e as configurações têm o próprio cabeçalho (abas/menu lateral)
@@ -330,6 +332,11 @@ fun MainScreen(
                             MainNavDestination.WARDROBE -> {
                                 if (mainScreenKey !is NormalNavKey.Wardrobe) {
                                     navigator.topLevel(NormalNavKey.Wardrobe)
+                                }
+                            }
+                            MainNavDestination.SHOP -> {
+                                if (mainScreenKey !is NormalNavKey.Shop) {
+                                    navigator.topLevel(NormalNavKey.Shop)
                                 }
                             }
                             MainNavDestination.MULTIPLAYER -> {
@@ -642,6 +649,9 @@ private fun NavigationUI(
                             screenBackStackModel.mainScreen.navigateTo(NormalNavKey.VersionsManager)
                         }
                     )
+                }
+                entry<NormalNavKey.Shop> {
+                    CosmeticShopScreen(backStackViewModel = screenBackStackModel)
                 }
                 entry<NormalNavKey.Wardrobe> {
                     WardrobeScreen(

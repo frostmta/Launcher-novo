@@ -98,6 +98,12 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.foundation.Image
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.platform.LocalContext
+import com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientInstaller
+import com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod
 
 /**
  * Tela Início do Zadrinth Client: herói animado com o botão JOGAR, faixa de
@@ -185,6 +191,12 @@ private fun HomeMain(
             versions = validVersions,
             onPlay = { quickPlay?.let(onPlayInstance) ?: onCreateInstance() },
             onSelectVersion = { VersionsManager.saveVersion(it) }
+        )
+
+        ZadrinthClientCard(
+            modifier = Modifier.fillMaxWidth(),
+            versions = validVersions,
+            onPlay = onPlayInstance
         )
 
         if (servers.isNotEmpty()) {
@@ -526,6 +538,96 @@ private fun InstanceTile(
                     onClick = onPlay,
                     size = 32.dp,
                     contentDescription = stringResource(R.string.library_play_instance, version.getVersionName())
+                )
+            }
+        }
+    }
+}
+
+
+private val ClientCardShape = RoundedCornerShape(16.dp)
+
+/**
+ * Cartão do Zadrinth Client: se ainda não existe uma instância do client,
+ * instala o Minecraft 1.8.9 com tudo pronto em um toque; se já existe, JOGAR.
+ */
+@Composable
+private fun ZadrinthClientCard(
+    versions: List<Version>,
+    onPlay: (Version) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val context = LocalContext.current
+    val state by ZadrinthClientInstaller.state.collectAsStateWithLifecycle()
+    val clientVersion = remember(versions) {
+        versions.firstOrNull { it.getVersionName() == ZadrinthClientMod.INSTANCE_NAME && ZadrinthClientMod.isSupported(it) }
+            ?: versions.firstOrNull { ZadrinthClientMod.isSupported(it) }
+    }
+
+    Row(
+        modifier = modifier
+            .clip(ClientCardShape)
+            .background(
+                Brush.horizontalGradient(
+                    listOf(Color(0xFF1B1433), Color(0xFF2A1D55), Color(0xFF3A1F5C))
+                )
+            )
+            .border(1.dp, Color(0x669D7BFF), ClientCardShape)
+            .padding(14.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Image(
+            painter = painterResource(R.drawable.zadrinth_client_logo),
+            contentDescription = null,
+            modifier = Modifier.size(56.dp)
+        )
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = "ZADRINTH CLIENT 1.8.9",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp,
+                color = Color.White
+            )
+            val subtitle = when (val current = state) {
+                is ZadrinthClientInstaller.State.Working -> "Instalando o Minecraft 1.8.9 com o client... (pode levar alguns minutos)"
+                is ZadrinthClientInstaller.State.Failed -> "Não deu certo: ${current.message}"
+                else -> if (clientVersion != null) {
+                    "Mods de PvP, HUD, zoom e cosméticos já embutidos. É só jogar."
+                } else {
+                    "O client de PvP do Zadrinth: instala tudo pronto, em um toque."
+                }
+            }
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = if (state is ZadrinthClientInstaller.State.Failed) Color(0xFFFCA5A5) else Color.White.copy(alpha = 0.72f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+        Spacer(Modifier.width(12.dp))
+        when {
+            state is ZadrinthClientInstaller.State.Working -> {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(22.dp),
+                        strokeWidth = 2.dp,
+                        color = Color(0xFFE07BFF)
+                    )
+                    TextButton(onClick = { ZadrinthClientInstaller.cancel() }) {
+                        Text(text = "Cancelar", color = Color.White.copy(alpha = 0.8f))
+                    }
+                }
+            }
+            clientVersion != null -> ModrinthBrandButton(onClick = { onPlay(clientVersion) }) {
+                Text(text = "JOGAR", fontWeight = FontWeight.Bold)
+            }
+            else -> ModrinthBrandButton(onClick = { ZadrinthClientInstaller.install(context) }) {
+                Text(
+                    text = if (state is ZadrinthClientInstaller.State.Failed) "TENTAR DE NOVO" else "INSTALAR",
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
