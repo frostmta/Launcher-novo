@@ -6,7 +6,7 @@ public enum Icon {
 	SCOREBOARD, GLOBE, CLOCK, CHIP, GAUGE, REACH, BOLT, SPRINT,
 	ZOOM, SUN, MOON, CUBE, CROSSHAIR, LIST, SHIRT, PENCIL,
 	GEAR, CLOSE, HOME, BAG, INFO, BACK, RESET, CHECK,
-	BOSSBAR;
+	BOSSBAR, EYE;
 
 	public int u() {
 		return (ordinal() % 8) * 32;
