@@ -71,7 +71,7 @@ public final class CosmeticsFeatureRenderer implements FeatureRenderer {
 			}
 		}
 		if (!capeDrawn && hasVanillaCape(player)) {
-			CapeRenderer.render(player, motion, anim, player.getCapeId(), null, cloth);
+			CapeRenderer.render(player, motion, anim, vanillaCape(player), null, cloth);
 			capeDrawn = true;
 		}
 		if (loadout == null) return;
@@ -98,18 +98,34 @@ public final class CosmeticsFeatureRenderer implements FeatureRenderer {
 		}
 	}
 
+	/**
+	 * A capa de verdade do jogador (oficial, OptiFine não).
+	 *
+	 * ATENÇÃO: no yarn do 1.8.9 os nomes estão trocados. getCapeId() devolve a
+	 * SKIN (PlayerListEntry.getSkinTexture, ou a skin padrão) e getSkinId()
+	 * devolve a CAPA (PlayerListEntry.getElytraTexture). Conferido no bytecode
+	 * pelo CI. Usar getCapeId() aqui desenhava a skin de todo mundo como capa.
+	 */
+	private static Identifier vanillaCape(AbstractClientPlayerEntity player) {
+		return player.getSkinId();
+	}
+
 	/** Mesmas condições da capa do Minecraft. */
 	private static boolean hasVanillaCape(AbstractClientPlayerEntity player) {
-		if (!player.canRenderCapeTexture() || player.getCapeId() == null) return false;
+		//canRenderCapeTexture() = "tem entrada na lista de jogadores"
+		if (!player.canRenderCapeTexture() || vanillaCape(player) == null) return false;
 		PlayerModelPart part = capePart();
 		return part == null || player.isPartVisible(part);
 	}
 
 	private static PlayerModelPart capePart() {
 		if (capePart == null) {
-			for (PlayerModelPart part : PlayerModelPart.values()) {
+			PlayerModelPart[] parts = PlayerModelPart.values();
+			for (PlayerModelPart part : parts) {
 				if ("cape".equals(part.getName())) capePart = part;
 			}
+			//No 1.8.9 a capa é a primeira parte da lista
+			if (capePart == null && parts.length > 0) capePart = parts[0];
 		}
 		return capePart;
 	}

@@ -51,20 +51,15 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
           ls -la build/libs
-          echo "== Diagnóstico: métodos de capa/skin no Minecraft com nomes yarn"
+          echo "== Diagnóstico (temporário): freelook"
           MCJAR=""
           for j in $(find .gradle ~/.gradle -name "*.jar" 2>/dev/null | grep -v -e sources -e mappings); do
-            if unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/client/network/AbstractClientPlayerEntity.class"; then MCJAR="$j"; break; fi
+            if unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/client/render/GameRenderer.class"; then MCJAR="$j"; break; fi
           done
-          echo "jar: $MCJAR"
           if [ -n "$MCJAR" ]; then
-            javap -c -p -classpath "$MCJAR" net.minecraft.client.network.AbstractClientPlayerEntity | grep -E "^  (public|protected|private)|invoke|getfield|areturn|ireturn" | head -80
-            javap -c -p -classpath "$MCJAR" net.minecraft.client.network.PlayerListEntry | grep -E "^  (public|protected|private)|getfield|putfield|areturn" | head -60
-            unzip -l "$MCJAR" | grep -o "net/minecraft/client/network/PlayerListEntry[^ ]*class" | while read c; do
-              n=$(echo "$c" | sed 's#/#.#g; s#\.class$##')
-              echo "--- $n"; javap -c -p -classpath "$MCJAR" "$n" | grep -E "getstatic|putfield|invoke" | head -30
-            done
-            javap -c -p -classpath "$MCJAR" net.minecraft.client.render.entity.PlayerModelPart | grep -E "^  (public|protected|private)|getfield|ldc" | head -30
+            javap -c -p -classpath "$MCJAR" net.minecraft.entity.Entity | sed -n '/ increaseTransforms(float, float);/,/return/p' | head -30
+            javap -c -p -classpath "$MCJAR" net.minecraft.client.render.GameRenderer | sed -n '/ transformCamera(float);/,/^$/p' | grep -E "getfield|invoke" | head -40
+            javap -c -p -classpath "$MCJAR" net.minecraft.client.render.GameRenderer | grep -n "increaseTransforms" | head
           fi
           echo "Alvos dos mixins no .jar final (devem estar em nomes intermediary):"
           mkdir -p /tmp/modjar && unzip -qo build/libs/zadrinth-client-*.jar -d /tmp/modjar
