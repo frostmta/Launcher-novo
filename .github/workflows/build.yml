@@ -51,6 +51,14 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
           ls -la build/libs
+          echo "== Diagnóstico: métodos de capa/skin no Minecraft com nomes yarn"
+          MCJAR=$(find .gradle ~/.gradle -name "*.jar" -path "*1.8.9*" 2>/dev/null | grep -iE "yarn|named|mapped" | grep -v sources | head -1)
+          echo "jar: $MCJAR"
+          if [ -n "$MCJAR" ]; then
+            javap -c -p -classpath "$MCJAR" net.minecraft.client.network.AbstractClientPlayerEntity | grep -E "^  (public|protected|private)|invoke|getfield|areturn|ireturn" | head -80
+            javap -p -classpath "$MCJAR" net.minecraft.client.network.PlayerListEntry | head -40
+            javap -c -p -classpath "$MCJAR" net.minecraft.client.render.entity.PlayerModelPart | grep -E "^  (public|protected|private)|getfield|ldc" | head -40
+          fi
           echo "Alvos dos mixins no .jar final (devem estar em nomes intermediary):"
           mkdir -p /tmp/modjar && unzip -qo build/libs/zadrinth-client-*.jar -d /tmp/modjar
           unzip -l build/libs/zadrinth-client-*.jar | grep -iE "refmap|mixins.json" || true
