@@ -51,16 +51,6 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
           ls -la build/libs
-          echo "== Diagnóstico (temporário): freelook"
-          MCJAR=""
-          for j in $(find .gradle ~/.gradle -name "*.jar" 2>/dev/null | grep -v -e sources -e mappings); do
-            if unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/client/render/GameRenderer.class"; then MCJAR="$j"; break; fi
-          done
-          if [ -n "$MCJAR" ]; then
-            javap -c -p -classpath "$MCJAR" net.minecraft.entity.Entity | sed -n '/ increaseTransforms(float, float);/,/return/p' | head -30
-            javap -c -p -classpath "$MCJAR" net.minecraft.client.render.GameRenderer | sed -n '/ transformCamera(float);/,/^$/p' | grep -E "getfield|invoke" | head -40
-            javap -c -p -classpath "$MCJAR" net.minecraft.client.render.GameRenderer | grep -n "increaseTransforms" | head
-          fi
           echo "Alvos dos mixins no .jar final (devem estar em nomes intermediary):"
           mkdir -p /tmp/modjar && unzip -qo build/libs/zadrinth-client-*.jar -d /tmp/modjar
           unzip -l build/libs/zadrinth-client-*.jar | grep -iE "refmap|mixins.json" || true
