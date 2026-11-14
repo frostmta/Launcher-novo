@@ -13,6 +13,7 @@ import io.github.frostmta.zadrinth.client.module.impl.CpsModule;
 import io.github.frostmta.zadrinth.client.module.impl.CrosshairModule;
 import io.github.frostmta.zadrinth.client.module.impl.DirectionModule;
 import io.github.frostmta.zadrinth.client.module.impl.FpsModule;
+import io.github.frostmta.zadrinth.client.module.impl.FreelookModule;
 import io.github.frostmta.zadrinth.client.module.impl.FullbrightModule;
 import io.github.frostmta.zadrinth.client.module.impl.HitboxModule;
 import io.github.frostmta.zadrinth.client.module.impl.KeystrokesModule;
@@ -48,6 +49,7 @@ public final class ModuleManager {
 			new CpsModule(),
 			new ServerAddressModule(),
 			new FpsModule(),
+			new FreelookModule(),
 			new FullbrightModule(),
 			new HitboxModule(),
 			new TabIconModule(),

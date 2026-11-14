@@ -134,10 +134,14 @@ def icon(i):
         d.line([20, 66, 52, 98, 110, 32], fill=W, width=16, joint='curve')
     elif i == 32:  # bandeira/bossbar
         d.rounded_rectangle([10, 46, 118, 82], 8, outline=W, width=9); d.rectangle([22, 56, 80, 72], fill=W)
+    elif i == 33:  # olho (freelook)
+        arc(d, [4, 30, 124, 170], 206, 334, LW)
+        arc(d, [4, -42, 124, 98], 26, 154, LW)
+        d.ellipse([42, 42, 86, 86], fill=W); d.ellipse([56, 56, 72, 72], fill=(0, 0, 0, 0))
     return im.resize((32, 32), Image.LANCZOS)
 
 atlas = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
-for i in range(33):
+for i in range(34):
     atlas.alpha_composite(icon(i), ((i % 8) * 32, (i // 8) * 32))
 atlas.save(OUT)
 prev = Image.new('RGBA', (512, 512), (40, 36, 56, 255)); prev.alpha_composite(atlas.resize((512, 512), Image.LANCZOS))
