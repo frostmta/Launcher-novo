@@ -87,6 +87,8 @@ class GameLauncher(
 ) : Launcher(onExit, openPath) {
     private lateinit var gameManifest: GameManifest
     private var jnaDir: File? = null
+    /** .jar do Zadrinth Client a injetar (null se a instância não roda o client) */
+    private var zadrinthClientJar: File? = null
     private var configuredRenderer: RendererLaunchConfig? = null
     private val offlineServer = OfflineYggdrasilServer(0)
 
@@ -114,9 +116,9 @@ class GameLauncher(
             }
         }
 
-        //Zadrinth Client: instala/atualiza o mod do jogo em instâncias 1.8.9 + Legacy Fabric
-        withContext(Dispatchers.IO) {
-            ZadrinthClientMod.install(activity, version)
+        //Zadrinth Client: prepara o client embutido (injetado no jogo, não vai para a pasta mods)
+        zadrinthClientJar = withContext(Dispatchers.IO) {
+            ZadrinthClientMod.prepare(activity, version)
         }
 
         val manifest = GSON.fromJson(File(version.getVersionPath(), "${version.getVersionName()}.json").readText(), GameManifest::class.java)
@@ -172,6 +174,12 @@ class GameLauncher(
         if (is172 && versionInfo?.hasLoader(ModLoader.FORGE) == true) {
             Logger.debug(TAG, "Is Forge 1.7.2, use the patched sorting method.")
             put("sort.patch", "true")
+        }
+
+        //Zadrinth Client embutido
+        zadrinthClientJar?.let { jar ->
+            put("fabric.addMods", jar.absolutePath)
+            put("zadrinth.home", ZadrinthClientMod.homeDir.absolutePath)
         }
 
         //Jna

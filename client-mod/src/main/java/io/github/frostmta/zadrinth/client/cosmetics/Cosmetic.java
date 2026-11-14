@@ -17,6 +17,10 @@ public final class Cosmetic {
 	public final Currency currency;
 	/** Cor de destaque do cartão na loja (ARGB) */
 	public final int accent;
+	/** Quadros da animação (empilhados de cima para baixo na textura); 1 = parada */
+	public int frames = 1;
+	/** Duração de cada quadro (ms) */
+	public int frameMillis = 70;
 
 	Cosmetic(String id, CosmeticType type, String name, String description, int accent) {
 		this(id, type, name, description, 0, Currency.FREE, accent);
@@ -39,6 +43,18 @@ public final class Cosmetic {
 
 	public boolean isFree() {
 		return currency == Currency.FREE || price <= 0;
+	}
+
+	/** Deixa o item animado (a textura tem N quadros um embaixo do outro). */
+	Cosmetic animated(int frames, int frameMillis) {
+		this.frames = Math.max(1, frames);
+		this.frameMillis = Math.max(16, frameMillis);
+		return this;
+	}
+
+	/** Quadro atual da animação. */
+	public int frame() {
+		return frames <= 1 ? 0 : (int) ((System.currentTimeMillis() / frameMillis) % frames);
 	}
 
 	public String texturePath() {

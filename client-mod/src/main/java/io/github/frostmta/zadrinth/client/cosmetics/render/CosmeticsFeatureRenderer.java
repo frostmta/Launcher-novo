@@ -64,7 +64,9 @@ public final class CosmeticsFeatureRenderer implements FeatureRenderer {
 			CosmeticStyle style = loadout.style(CosmeticType.CAPE);
 			Identifier texture = CosmeticTextures.get(cape, style.tinted());
 			if (texture != null) {
+				Frames.begin(cape);
 				CapeRenderer.render(player, motion, anim, texture, style, cloth);
+				Frames.end(cape);
 				capeDrawn = true;
 			}
 		}
@@ -78,13 +80,21 @@ public final class CosmeticsFeatureRenderer implements FeatureRenderer {
 		if (wings != null) {
 			CosmeticStyle style = loadout.style(CosmeticType.WINGS);
 			Identifier texture = CosmeticTextures.get(wings, style.tinted());
-			if (texture != null) WingsRenderer.render(player, model, anim, texture, style, capeDrawn);
+			if (texture != null) {
+				Frames.begin(wings);
+				WingsRenderer.render(player, model, anim, texture, style, capeDrawn);
+				Frames.end(wings);
+			}
 		}
 		Cosmetic bandana = loadout.equipped(CosmeticType.BANDANA);
 		if (bandana != null) {
 			CosmeticStyle style = loadout.style(CosmeticType.BANDANA);
 			Identifier texture = CosmeticTextures.get(bandana, style.tinted());
-			if (texture != null) BandanaRenderer.render(player, model, motion, anim, texture, style);
+			if (texture != null) {
+				Frames.begin(bandana);
+				BandanaRenderer.render(player, model, motion, anim, texture, style);
+				Frames.end(bandana);
+			}
 		}
 	}
 

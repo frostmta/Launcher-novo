@@ -43,7 +43,7 @@ public final class Cosmetics {
 		add(new Cosmetic("paisley", CosmeticType.BANDANA, "Paisley Vermelha",
 				"A estampa clássica, em vermelho.", 0xFFD0262F));
 		add(new Cosmetic("chamas", CosmeticType.BANDANA, "Chamas",
-				"Fogo laranja sobre tecido preto.", 0xFFFF8A1E));
+				"Fogo de verdade: as chamas sobem e tremulam.", 0xFFFF8A1E).animated(16, 70));
 		add(new Cosmetic("galaxia", CosmeticType.BANDANA, "Galáxia",
 				"Nebulosas e estrelas em volta da cabeça.", 0xFF6E9BFF));
 		add(new Cosmetic("zadrinth", CosmeticType.BANDANA, "Zadrinth",

@@ -2,8 +2,10 @@ package io.github.frostmta.zadrinth.client.config;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import io.github.frostmta.zadrinth.client.ZadrinthClient;
 import io.github.frostmta.zadrinth.client.cosmetics.Loadout;
+import io.github.frostmta.zadrinth.client.module.ModuleManager;
 import net.minecraft.client.MinecraftClient;
 
 import java.io.File;
@@ -14,7 +16,9 @@ import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 /** Configuração do Zadrinth Client, salva em config/zadrinth-client.json. */
@@ -50,6 +54,9 @@ public final class ZadrinthConfig {
 	/** Mostrar os cosméticos de outros jogadores do Zadrinth */
 	public boolean showOthersCosmetics = true;
 
+	// --- Mods (estado e opções de cada módulo, por id) ---
+	public Map<String, JsonObject> modules = new LinkedHashMap<>();
+
 	public static ZadrinthConfig get() {
 		return instance;
 	}
@@ -61,6 +68,8 @@ public final class ZadrinthConfig {
 	public static void load() {
 		File file = file();
 		if (!file.isFile()) {
+			ModuleManager.load(instance);
+			SharedCosmetics.load(instance);
 			save();
 			return;
 		}
@@ -70,11 +79,15 @@ public final class ZadrinthConfig {
 				if (loaded.toggleSprintHudPosition == null) loaded.toggleSprintHudPosition = new HudPosition(0.005f, 0.96f, 1.0f);
 				if (loaded.ownedCosmetics == null) loaded.ownedCosmetics = new LinkedHashSet<>();
 				if (loaded.loadout == null) loaded.loadout = new Loadout();
+				if (loaded.modules == null) loaded.modules = new LinkedHashMap<>();
 				instance = loaded;
 			}
 		} catch (Exception e) {
 			ZadrinthClient.LOGGER.warn("Configuração inválida, usando o padrão", e);
 		}
+		ModuleManager.load(instance);
+		//Cosméticos ficam num arquivo dividido com o launcher (a Loja do launcher também mexe nele)
+		SharedCosmetics.load(instance);
 	}
 
 	public static void save() {
@@ -84,9 +97,11 @@ public final class ZadrinthConfig {
 			if (parent != null && !parent.isDirectory() && !parent.mkdirs()) {
 				ZadrinthClient.LOGGER.warn("Não foi possível criar {}", parent);
 			}
+			ModuleManager.store(instance);
 			try (Writer writer = new OutputStreamWriter(new FileOutputStream(file), StandardCharsets.UTF_8)) {
 				GSON.toJson(instance, writer);
 			}
+			SharedCosmetics.save(instance);
 		} catch (Exception e) {
 			ZadrinthClient.LOGGER.warn("Não foi possível salvar a configuração", e);
 		}

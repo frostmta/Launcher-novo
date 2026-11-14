@@ -77,6 +77,7 @@ enum class MainNavDestination(
     SERVERS(R.string.nav_servers, R.drawable.ic_dns_outlined),
     EXPLORE(R.string.nav_explore, R.drawable.ic_package_2_outlined),
     WARDROBE(R.string.nav_wardrobe, R.drawable.ic_checkroom),
+    SHOP(R.string.nav_shop, R.drawable.ic_shopping_bag),
     MULTIPLAYER(R.string.nav_multiplayer, R.drawable.ic_public),
     SETTINGS(R.string.nav_settings, R.drawable.ic_settings_filled),
 }
@@ -95,6 +96,7 @@ fun TitledNavKey?.toMainNavDestination(): MainNavDestination? = when (this) {
     is NestedNavKey.VersionExport -> MainNavDestination.LIBRARY
     is NormalNavKey.Multiplayer -> MainNavDestination.MULTIPLAYER
     is NormalNavKey.Wardrobe -> MainNavDestination.WARDROBE
+    is NormalNavKey.Shop -> MainNavDestination.SHOP
     is NormalNavKey.Servers -> MainNavDestination.SERVERS
     is NestedNavKey.Settings, is NormalNavKey.License -> MainNavDestination.SETTINGS
     else -> null
@@ -150,6 +152,7 @@ fun ZadrinthSidebar(
                 MainNavDestination.SERVERS,
                 MainNavDestination.EXPLORE,
                 MainNavDestination.WARDROBE,
+                MainNavDestination.SHOP,
                 MainNavDestination.MULTIPLAYER
             ).forEach { destination ->
                 SidebarButton(

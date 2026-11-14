@@ -4,15 +4,21 @@
   "package": "io.github.frostmta.zadrinth.client.mixin",
   "compatibilityLevel": "JAVA_8",
   "client": [
+    "ClientPlayerInteractionManagerMixin",
     "GameMenuScreenMixin",
     "GameOptionsMixin",
+    "GameRendererMixin",
     "InGameHudMixin",
     "KeyBindingAccessor",
     "KeyBindingMixin",
+    "KeyBindingStaticMixin",
     "LivingEntityRendererAccessor",
     "MinecraftClientMixin",
     "PlayerEntityRendererMixin",
-    "PlayerListHudMixin"
+    "PlayerInventoryMixin",
+    "PlayerListHudMixin",
+    "TitleScreenAccessor",
+    "WorldMixin"
   ],
   "injectors": {
     "defaultRequire": 0

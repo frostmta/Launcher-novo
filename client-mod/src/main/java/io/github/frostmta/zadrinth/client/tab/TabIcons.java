@@ -1,19 +1,13 @@
 package io.github.frostmta.zadrinth.client.tab;
 
 import com.mojang.blaze3d.platform.GlStateManager;
-import io.github.frostmta.zadrinth.client.ZadrinthClient;
 import io.github.frostmta.zadrinth.client.config.ZadrinthConfig;
 import io.github.frostmta.zadrinth.client.presence.Presence;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawableHelper;
 import net.minecraft.client.network.PlayerListEntry;
-import net.minecraft.client.texture.NativeImageBackedTexture;
-import net.minecraft.util.Identifier;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.io.InputStream;
 
 /**
  * Ícone do Zadrinth ao lado do nome no TAB.
@@ -31,8 +25,6 @@ public final class TabIcons {
 	private static final int ICON_SIZE = 8;
 	private static final int TEXT_OFFSET = 12;
 
-	private static Identifier texture;
-	private static boolean textureFailed;
 
 	private TabIcons() {
 	}
@@ -58,29 +50,13 @@ public final class TabIcons {
 	}
 
 	private static void drawIcon(int x, int y) {
-		Identifier id = texture();
-		if (id == null) return;
-		MinecraftClient.getInstance().getTextureManager().bindTexture(id);
+		//O símbolo do Zadrinth Client: versão de 32 px (lisa) ou de 16 px (pixel art) conforme a escala
+		int scale = new net.minecraft.client.util.Window(MinecraftClient.getInstance()).getScaleFactor();
+		boolean big = scale * ICON_SIZE >= 20;
+		if (!io.github.frostmta.zadrinth.client.gui.Textures.bind(big ? "textures/tab_icon_32.png" : "textures/tab_icon_16.png", big)) return;
 		GlStateManager.enableBlend();
 		GlStateManager.color(1f, 1f, 1f, 1f);
-		DrawableHelper.drawTexture(x + 1, y, 0f, 0f, 16, 16, ICON_SIZE, ICON_SIZE, 16f, 16f);
-	}
-
-	/**
-	 * Carrega o ícone direto do .jar (sem depender da Legacy Fabric API para
-	 * registrar os recursos do mod).
-	 */
-	private static Identifier texture() {
-		if (texture != null || textureFailed) return texture;
-		try (InputStream in = TabIcons.class.getResourceAsStream("/assets/zadrinth-client/tab_icon.png")) {
-			if (in == null) throw new IllegalStateException("tab_icon.png não encontrado");
-			BufferedImage image = ImageIO.read(in);
-			texture = MinecraftClient.getInstance().getTextureManager()
-					.registerDynamicTexture("zadrinth_tab_icon", new NativeImageBackedTexture(image));
-		} catch (Exception e) {
-			textureFailed = true;
-			ZadrinthClient.LOGGER.warn("Não foi possível carregar o ícone do TAB", e);
-		}
-		return texture;
+		int size = big ? 32 : 16;
+		DrawableHelper.drawTexture(x + 1, y, 0f, 0f, size, size, ICON_SIZE, ICON_SIZE, (float) size, (float) size);
 	}
 }

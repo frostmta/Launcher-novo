@@ -350,6 +350,13 @@ public class ShopScreen extends Screen {
 
 	/** Enquadra o jogador conforme o tipo: capa/asas de costas, bandana de perto. */
 	private void drawPreview(Cosmetic cosmetic, Loadout loadout, int centerX, int top, int height, int width, boolean big) {
+		if (this.client.player == null) {
+			//Sem mundo aberto (tela inicial): mostra o cosmético em 2D
+			int pad = big ? 10 : 6;
+			io.github.frostmta.zadrinth.client.cosmetics.render.CosmeticIcons.draw(cosmetic,
+					centerX - width / 2 + pad, top + pad, width - pad * 2, height - pad * 2);
+			return;
+		}
 		float yaw = big ? previewYaw : cosmetic.type == CosmeticType.BANDANA ? 25.0F : 200.0F;
 		int size;
 		int feetY;
