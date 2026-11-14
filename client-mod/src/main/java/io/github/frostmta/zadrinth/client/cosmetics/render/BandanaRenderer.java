@@ -60,6 +60,31 @@ final class BandanaRenderer {
 		GlStateManager.popMatrix();
 	}
 
+	/** Bandana sem jogador (tela inicial): pontas balançando devagar. */
+	static void renderPreview(PlayerEntityModel model, Identifier texture, CosmeticStyle style, float seconds) {
+		MinecraftClient.getInstance().getTextureManager().bindTexture(texture);
+		GlStateManager.pushMatrix();
+		model.head.preRender(0.0625F);
+		GlStateManager.scale(0.0625F, 0.0625F, 0.0625F);
+		float headPitch = (float) Math.toDegrees(model.head.posX);
+		final float[] tail1 = new float[TAIL_SEGMENTS];
+		final float[] tail2 = new float[TAIL_SEGMENTS];
+		for (int j = 0; j < TAIL_SEGMENTS; j++) {
+			tail1[j] = 16.0F + j * 6.0F + 5.0F * (float) Math.sin(seconds * 2.6F + j * 0.9F) - headPitch;
+			tail2[j] = 16.0F + j * 6.0F + 5.0F * (float) Math.sin(seconds * 2.6F + 1.3F + j * 0.9F) - headPitch;
+		}
+		Glint.tint(style);
+		draw(tail1, tail2);
+		if (style != null && style.glint) Glint.render(new Runnable() {
+			@Override
+			public void run() {
+				draw(tail1, tail2);
+			}
+		});
+		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+		GlStateManager.popMatrix();
+	}
+
 	private static void draw(float[] tail1, float[] tail2) {
 		Tessellator tessellator = Tessellator.getInstance();
 		BufferBuilder buffer = tessellator.getBuffer();

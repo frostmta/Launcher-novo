@@ -58,6 +58,31 @@ final class WingsRenderer {
 		GlStateManager.popMatrix();
 	}
 
+	/** Asas sem jogador (tela inicial): batida lenta. */
+	static void renderPreview(PlayerEntityModel model, Identifier texture, CosmeticStyle style, boolean behindCape, float seconds) {
+		MinecraftClient.getInstance().getTextureManager().bindTexture(texture);
+		GlStateManager.pushMatrix();
+		model.body.preRender(0.0625F);
+		GlStateManager.scale(0.0625F, 0.0625F, 0.0625F);
+		GlStateManager.translate(0.0F, 3.0F, behindCape ? 3.4F : 2.2F);
+		GlStateManager.enableAlphaTest();
+		GlStateManager.alphaFunc(516, 0.1F);
+		float phase = seconds * 2.4F;
+		final float sweep = 22.0F + 12.0F * (float) Math.sin(phase);
+		final float bend = 14.0F + 10.0F * (float) Math.sin(phase - 0.8F);
+		final float lift = 5.0F * (float) Math.sin(phase + 0.5F) - 4.0F;
+		Glint.tint(style);
+		drawPair(sweep, bend, lift);
+		if (style != null && style.glint) Glint.render(new Runnable() {
+			@Override
+			public void run() {
+				drawPair(sweep, bend, lift);
+			}
+		});
+		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+		GlStateManager.popMatrix();
+	}
+
 	private static void drawPair(float sweep, float bend, float lift) {
 		for (int side = -1; side <= 1; side += 2) {
 			GlStateManager.pushMatrix();

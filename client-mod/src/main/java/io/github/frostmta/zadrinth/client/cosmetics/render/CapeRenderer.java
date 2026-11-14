@@ -69,6 +69,30 @@ final class CapeRenderer {
 		GlStateManager.popMatrix();
 	}
 
+	/** Capa sem jogador (modelo da tela inicial): balança devagar com o tempo. */
+	static void renderPreview(Identifier texture, CosmeticStyle style, float seconds) {
+		MinecraftClient.getInstance().getTextureManager().bindTexture(texture);
+		GlStateManager.pushMatrix();
+		GlStateManager.translate(0.0F, 0.0F, 0.125F);
+		GlStateManager.rotate(8.0F + 2.0F * (float) Math.sin(seconds * 1.3F), 1.0F, 0.0F, 0.0F);
+		GlStateManager.scale(0.0625F, 0.0625F, 0.0625F);
+		final float[] angles = new float[SEGMENTS + 1];
+		for (int k = 0; k <= SEGMENTS; k++) {
+			float t = (float) k / SEGMENTS;
+			angles[k] = 3.0F * t * (float) Math.sin(seconds * 2.2F - t * 3.4F) + 4.0F * t;
+		}
+		Glint.tint(style);
+		draw(angles);
+		if (style != null && style.glint) Glint.render(new Runnable() {
+			@Override
+			public void run() {
+				draw(angles);
+			}
+		});
+		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
+		GlStateManager.popMatrix();
+	}
+
 	/** angles[k] = inclinação extra (graus) em cada "junta" da capa, de cima (0) para baixo. */
 	private static void draw(float[] angles) {
 		float[] jy = new float[SEGMENTS + 1];
