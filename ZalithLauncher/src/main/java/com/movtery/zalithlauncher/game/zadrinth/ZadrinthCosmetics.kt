@@ -80,6 +80,7 @@ object ZadrinthCosmetics {
         ShopCosmetic("mare", CosmeticSlot.CAPE, "Maré Noturna", "Ondas rolando sob a lua cheia.", 0xFF4F9BFF, animated = true),
         ShopCosmetic("prisma", CosmeticSlot.CAPE, "Prisma RGB", "Arco-íris correndo em volta do cristal do Zadrinth.", 0xFFFFFFFF, animated = true),
         ShopCosmetic("chuva_digital", CosmeticSlot.CAPE, "Chuva Digital", "Código verde caindo como chuva.", 0xFF22E06A, animated = true),
+        ShopCosmetic("orgulho", CosmeticSlot.CAPE, "Orgulho", "Bandeira arco-íris em apoio à comunidade LGBTQIA+.", 0xFFFF8C00, animated = true),
         ShopCosmetic("demonio", CosmeticSlot.WINGS, "Asas de Demônio", "Membrana carmesim com garras de osso.", 0xFFE2384A),
         ShopCosmetic("dragao_esmeralda", CosmeticSlot.WINGS, "Dragão Esmeralda", "Escamas verdes e espinhos ao longo do braço.", 0xFF2FD37A),
         ShopCosmetic("celestial", CosmeticSlot.WINGS, "Asas Celestiais", "Penas brancas com pontas douradas.", 0xFFF2C65A),

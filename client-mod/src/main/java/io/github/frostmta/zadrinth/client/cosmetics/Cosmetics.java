@@ -40,6 +40,8 @@ public final class Cosmetics {
 				"Arco-íris correndo em volta do cristal do Zadrinth.", 0xFFFFFFFF).animated(12, 80));
 		add(new Cosmetic("chuva_digital", CosmeticType.CAPE, "Chuva Digital",
 				"Código verde caindo como chuva.", 0xFF22E06A).animated(12, 80));
+		add(new Cosmetic("orgulho", CosmeticType.CAPE, "Orgulho",
+				"Bandeira arco-íris em apoio à comunidade LGBTQIA+.", 0xFFFF8C00).animated(12, 100));
 
 		//Asas
 		add(new Cosmetic("demonio", CosmeticType.WINGS, "Asas de Demônio",
