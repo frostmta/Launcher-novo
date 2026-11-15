@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "zadrinth-client",
+  "version": "${version}",
+  "name": "Zadrinth Client",
+  "description": "Zadrinth Client para 1.21.11: mods de PvP, editor de HUD, zoom, freelook e cosméticos sincronizados.",
+  "authors": ["frostmta"],
+  "contact": {
+    "sources": "https://github.com/frostmta/Launcher-novo"
+  },
+  "license": "GPL-3.0-or-later",
+  "icon": "assets/zadrinth-client/icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["io.github.frostmta.zadrinth.client.ZadrinthClient"]
+  },
+  "mixins": ["zadrinth-client.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.17.0",
+    "minecraft": "1.21.11",
+    "java": ">=21"
+  }
+}
