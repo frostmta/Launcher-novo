@@ -20,6 +20,8 @@
 package com.movtery.zalithlauncher.game.zadrinth
 
 import android.content.Context
+import com.movtery.zalithlauncher.game.addons.modloader.ModLoader
+import com.movtery.zalithlauncher.game.addons.modloader.fabriclike.fabric.FabricVersions
 import com.movtery.zalithlauncher.game.addons.modloader.fabriclike.legacyfabric.LegacyFabricVersions
 import com.movtery.zalithlauncher.game.download.game.GameDownloadInfo
 import com.movtery.zalithlauncher.game.download.game.GameInstaller
@@ -35,9 +37,10 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Instala o Zadrinth Client com um toque: Minecraft 1.8.9 + Legacy Fabric
- * (escolhido sozinho, sem a Legacy Fabric API), numa instância chamada
- * "Zadrinth Client 1.8.9". O client em si é injetado na hora de jogar.
+ * Instala o Zadrinth Client com um toque: o Minecraft da versão escolhida +
+ * o loader certo (Legacy Fabric no 1.8.9, Fabric no 1.21.11), numa instância
+ * chamada "Zadrinth Client <versão>". O client em si é injetado na hora de
+ * jogar (a Fabric API do 1.21.11 já vem dentro dele).
  */
 object ZadrinthClientInstaller {
     private const val TAG = "ZadrinthClientInstaller"
@@ -55,35 +58,46 @@ object ZadrinthClientInstaller {
     private val _state = MutableStateFlow<State>(State.Idle)
     val state: StateFlow<State> = _state.asStateFlow()
 
-    fun install(context: Context) {
+    /** Versão sendo instalada agora */
+    var installing: ClientTarget? = null
+        private set
+
+    fun install(context: Context, target: ClientTarget = ClientTarget.V1_8_9) {
         if (_state.value is State.Working) return
         _state.value = State.Working
+        installing = target
         val appContext = context.applicationContext
         scope.launch {
-            val loader = withContext(Dispatchers.IO) {
-                runCatching {
-                    LegacyFabricVersions.fetchFabricLoaderList(ZadrinthClientMod.MINECRAFT_VERSION, force = false)
-                }.onFailure { Logger.warning(TAG, "Could not fetch Legacy Fabric loaders", it) }.getOrNull()
-            }?.let { list -> list.firstOrNull { it.stable } ?: list.firstOrNull() }
-
-            if (loader == null) {
-                _state.value = State.Failed("Não foi possível baixar a lista do Legacy Fabric. Verifique a internet e tente de novo.")
+            var info: GameDownloadInfo? = null
+            var name = target.instanceName
+            var index = 2
+            while (VersionsManager.isVersionExists(name, checkJson = true)) {
+                name = "${target.instanceName} ($index)"
+                index++
+            }
+            when (target.loader) {
+                ModLoader.LEGACY_FABRIC -> {
+                    val loader = withContext(Dispatchers.IO) {
+                        runCatching { LegacyFabricVersions.fetchFabricLoaderList(target.minecraft, force = false) }
+                            .onFailure { Logger.warning(TAG, "Could not fetch Legacy Fabric loaders", it) }.getOrNull()
+                    }?.let { list -> list.firstOrNull { it.stable } ?: list.firstOrNull() }
+                    if (loader != null) info = GameDownloadInfo(gameVersion = target.minecraft, customVersionName = name, legacyFabric = loader)
+                }
+                else -> {
+                    val loader = withContext(Dispatchers.IO) {
+                        runCatching { FabricVersions.fetchFabricLoaderList(target.minecraft, force = false) }
+                            .onFailure { Logger.warning(TAG, "Could not fetch Fabric loaders", it) }.getOrNull()
+                    }?.let { list -> list.firstOrNull { it.stable } ?: list.firstOrNull() }
+                    if (loader != null) info = GameDownloadInfo(gameVersion = target.minecraft, customVersionName = name, fabric = loader)
+                }
+            }
+            val download = info
+            if (download == null) {
+                _state.value = State.Failed("Não foi possível baixar a lista do Fabric. Verifique a internet e tente de novo.")
                 return@launch
             }
 
-            var name = ZadrinthClientMod.INSTANCE_NAME
-            var index = 2
-            while (VersionsManager.isVersionExists(name, checkJson = true)) {
-                name = "${ZadrinthClientMod.INSTANCE_NAME} ($index)"
-                index++
-            }
-
-            val info = GameDownloadInfo(
-                gameVersion = ZadrinthClientMod.MINECRAFT_VERSION,
-                customVersionName = name,
-                legacyFabric = loader
-            )
-            installer = GameInstaller(appContext, info, scope).also { gameInstaller ->
+            installer = GameInstaller(appContext, download, scope).also { gameInstaller ->
                 gameInstaller.installGame(
                     onInstalled = { version ->
                         installer = null

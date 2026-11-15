@@ -78,6 +78,9 @@ object AllSettings : SettingsRegistry() {
      */
     val resolutionRatio = intSetting("resolutionRatio", 100, 25..300)
 
+    /** Versão do Zadrinth Client escolhida na tela inicial (ClientTarget.name) */
+    val zadrinthClientVersion = stringSetting("zadrinthClientVersion", "V1_8_9")
+
     /**
      * 分辨率规则
      */

@@ -1,0 +1,58 @@
+plugins {
+	id "net.fabricmc.fabric-loom-remap" version "${loom_version}"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	// Fabric API vai DENTRO do .jar do client: o launcher só precisa do Fabric Loader
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+	include "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+}
+
+//Testes no jogo de verdade (CI): abre o Minecraft, tira prints das telas do client
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "zadrinth-client-test"
+		enableGameTests = false
+		enableClientGameTests = true
+		eula = true
+	}
+}
+
+processResources {
+	// Supabase (sincronização dos cosméticos entre jogadores): vem dos segredos do GitHub no CI
+	def supabaseUrl = System.getenv("SUPABASE_URL") ?: ""
+	def supabaseKey = System.getenv("SUPABASE_ANON_KEY") ?: ""
+	def version = project.version
+	inputs.property "version", version
+	inputs.property "supabaseUrl", supabaseUrl
+	inputs.property "supabaseKey", supabaseKey
+
+	filesMatching("fabric.mod.json") {
+		expand "version": version
+	}
+	filesMatching("zadrinth-client.properties") {
+		expand "version": version, "supabaseUrl": supabaseUrl, "supabaseKey": supabaseKey
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.encoding = "UTF-8"
+	it.options.release = 21
+}
+
+java {
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}

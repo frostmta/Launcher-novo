@@ -66,8 +66,63 @@ jobs:
           path: client-mod/build/libs/zadrinth-client-*.jar
           if-no-files-found: error
 
+  client-mod-modern:
+    name: Zadrinth Client mod (1.21.11)
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: "temurin"
+          java-version: "25"
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+        with:
+          add-job-summary: "on-failure"
+
+      - name: Build mod
+        working-directory: client-mod-1.21.11
+        run: |
+          chmod +x gradlew
+          ./gradlew build --stacktrace
+          ls -la build/libs
+
+      - name: Testar no jogo de verdade (prints das telas)
+        working-directory: client-mod-1.21.11
+        timeout-minutes: 30
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 > /dev/null
+          set +e
+          ALSOFT_DRIVERS=null LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x720x24" ./gradlew --no-daemon runClientGameTest > /tmp/gametest.log 2>&1
+          echo "resultado do teste: $?"
+          grep -iE "error|exception|mixin|zadrinth|warn" /tmp/gametest.log | grep -v "DEBUG" | head -150
+          tail -40 /tmp/gametest.log
+          for f in $(find build/run -name "*.png" -path "*screenshot*" | sort); do
+            echo "==IMG $(basename "$f")"
+            base64 -w 1000 "$f"
+            echo "==ENDIMG"
+          done
+          exit 0
+
+      - name: Upload mod
+        uses: actions/upload-artifact@v7
+        with:
+          name: zadrinth-client-mod-1.21.11
+          path: client-mod-1.21.11/build/libs/zadrinth-client-1.21.11-*.jar
+          if-no-files-found: error
+
   build:
-    needs: client-mod
+    needs: [client-mod, client-mod-modern]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
@@ -93,11 +148,19 @@ jobs:
           name: zadrinth-client-mod
           path: client-mod-jar
 
+      - name: Download Zadrinth Client mod (1.21.11)
+        uses: actions/download-artifact@v8
+        with:
+          name: zadrinth-client-mod-1.21.11
+          path: client-mod-modern-jar
+
       - name: Put mod into the APK assets
         run: |
           jar=$(ls client-mod-jar/zadrinth-client-*.jar | grep -v sources | head -1)
           mkdir -p ZalithLauncher/src/main/assets/client
           cp "$jar" ZalithLauncher/src/main/assets/client/zadrinth-client.jar
+          modern=$(ls client-mod-modern-jar/zadrinth-client-1.21.11-*.jar | grep -v sources | head -1)
+          cp "$modern" ZalithLauncher/src/main/assets/client/zadrinth-client-1.21.11.jar
           ls -la ZalithLauncher/src/main/assets/client
 
       - name: Set up JDK 21
