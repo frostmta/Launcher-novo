@@ -17,6 +17,7 @@ public final class HudManager {
 	public static void render(MinecraftClient client) {
 		if (client.player == null) return;
 		Window window = new Window(client);
+		io.github.frostmta.zadrinth.client.module.impl.AutoClickerModule.onFrame(client);
 		CrosshairModule.render(window.getWidth(), window.getHeight());
 		if (client.currentScreen instanceof HudEditorScreen) return;
 		for (HudModule module : ModuleManager.hudModules()) {

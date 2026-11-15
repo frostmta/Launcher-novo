@@ -6,6 +6,7 @@
   "client": [
     "ClientPlayerInteractionManagerMixin",
     "EntityMixin",
+    "EntityRenderDispatcherMixin",
     "GameMenuScreenMixin",
     "GameOptionsMixin",
     "GameRendererMixin",

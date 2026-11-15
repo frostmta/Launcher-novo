@@ -98,7 +98,17 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.RepeatMode
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.material3.AlertDialog
+import androidx.compose.runtime.rememberCoroutineScope
+import com.movtery.zalithlauncher.game.zadrinth.OptiFineSupport
+import com.movtery.zalithlauncher.setting.AllSettings
+import kotlinx.coroutines.launch
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
@@ -170,6 +180,13 @@ private fun HomeMain(
     val validVersions = remember(versions) { versions.filter { it.isValid() } }
     val recent = remember(validVersions, stats) { validVersions.sortedByRecent(stats).take(4) }
     val quickPlay = rememberQuickJoinVersion()
+    val context = LocalContext.current
+    val installState by ZadrinthClientInstaller.state.collectAsStateWithLifecycle()
+    //O Zadrinth Client é o jogo principal do launcher
+    val clientVersion = remember(validVersions) {
+        validVersions.firstOrNull { it.getVersionName() == ZadrinthClientMod.INSTANCE_NAME && ZadrinthClientMod.isSupported(it) }
+            ?: validVersions.firstOrNull { ZadrinthClientMod.isSupported(it) }
+    }
 
     val (servers, serverStatus) = rememberFeaturedServers()
     val joinServer = rememberQuickJoin(
@@ -187,16 +204,17 @@ private fun HomeMain(
         HomeHero(
             modifier = Modifier.fillMaxWidth(),
             playerName = account?.username ?: stringResource(R.string.home_greeting_default_name),
-            version = quickPlay,
-            versions = validVersions,
-            onPlay = { quickPlay?.let(onPlayInstance) ?: onCreateInstance() },
-            onSelectVersion = { VersionsManager.saveVersion(it) }
+            clientVersion = clientVersion,
+            installState = installState,
+            otherVersions = validVersions.filter { it != clientVersion },
+            onPlay = { if (clientVersion != null) onPlayInstance(clientVersion) else ZadrinthClientInstaller.install(context) },
+            onPlayOther = onPlayInstance,
+            onCancelInstall = { ZadrinthClientInstaller.cancel() }
         )
 
-        ZadrinthClientCard(
+        ZadrinthToolsRow(
             modifier = Modifier.fillMaxWidth(),
-            versions = validVersions,
-            onPlay = onPlayInstance
+            clientVersion = clientVersion
         )
 
         if (servers.isNotEmpty()) {
@@ -259,10 +277,12 @@ private val HeroShape = RoundedCornerShape(18.dp)
 @Composable
 private fun HomeHero(
     playerName: String,
-    version: Version?,
-    versions: List<Version>,
+    clientVersion: Version?,
+    installState: ZadrinthClientInstaller.State,
+    otherVersions: List<Version>,
     onPlay: () -> Unit,
-    onSelectVersion: (Version) -> Unit,
+    onPlayOther: (Version) -> Unit,
+    onCancelInstall: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -278,43 +298,74 @@ private fun HomeHero(
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
-            Text(
-                text = stringResource(R.string.home_hero_brand),
-                style = MaterialTheme.typography.labelMedium,
-                letterSpacing = 3.sp,
-                color = Color.White.copy(alpha = 0.65f)
-            )
-            Text(
-                text = stringResource(R.string.home_greeting, playerName),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.White,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Image(
+                    painter = painterResource(R.drawable.zadrinth_client_logo),
+                    contentDescription = null,
+                    modifier = Modifier.size(34.dp)
+                )
+                Spacer(Modifier.width(10.dp))
+                Column {
+                    Text(
+                        text = stringResource(R.string.home_hero_brand),
+                        style = MaterialTheme.typography.labelMedium,
+                        letterSpacing = 3.sp,
+                        color = Color.White.copy(alpha = 0.65f)
+                    )
+                    Text(
+                        text = stringResource(R.string.home_greeting, playerName),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+            }
             Box(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center
             ) {
+                val working = installState is ZadrinthClientInstaller.State.Working
+                val failed = installState as? ZadrinthClientInstaller.State.Failed
                 HeroPlayButton(
-                    version = version,
-                    versions = versions,
+                    title = when {
+                        working -> "INSTALANDO..."
+                        clientVersion != null -> stringResource(R.string.home_hero_play)
+                        failed != null -> "TENTAR DE NOVO"
+                        else -> "INSTALAR"
+                    },
+                    subtitle = when {
+                        working -> "Baixando o Minecraft 1.8.9 com o client"
+                        failed != null -> failed.message
+                        else -> "Zadrinth Client 1.8.9"
+                    },
+                    busy = working,
                     onPlay = onPlay,
-                    onSelectVersion = onSelectVersion
+                    onCancel = onCancelInstall,
+                    otherVersions = otherVersions,
+                    onPlayOther = onPlayOther
                 )
             }
         }
     }
 }
 
+/**
+ * Botão principal: joga (ou instala) o Zadrinth Client. A setinha ao lado
+ * abre as outras instâncias para jogar uma delas.
+ */
 @Composable
 private fun HeroPlayButton(
-    version: Version?,
-    versions: List<Version>,
+    title: String,
+    subtitle: String,
+    busy: Boolean,
     onPlay: () -> Unit,
-    onSelectVersion: (Version) -> Unit,
+    onCancel: () -> Unit,
+    otherVersions: List<Version>,
+    onPlayOther: (Version) -> Unit,
 ) {
     val colors = ModrinthTheme.colors
     val shape = RoundedCornerShape(16.dp)
@@ -346,30 +397,39 @@ private fun HeroPlayButton(
                 .height(IntrinsicSize.Min),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
+            Row(
                 modifier = Modifier
-                    .clickable(role = Role.Button, onClick = onPlay)
+                    .clickable(role = Role.Button, enabled = !busy, onClick = onPlay)
                     .padding(horizontal = 30.dp, vertical = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = if (version != null) stringResource(R.string.home_hero_play)
-                    else stringResource(R.string.home_hero_create).uppercase(),
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.ExtraBold,
-                    letterSpacing = 3.sp,
-                    color = colors.onBrandBrush
-                )
-                Text(
-                    text = version?.getVersionName() ?: stringResource(R.string.home_no_instances),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = colors.onBrandBrush.copy(alpha = 0.75f),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.widthIn(max = 200.dp)
-                )
+                if (busy) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        strokeWidth = 2.dp,
+                        color = colors.onBrandBrush
+                    )
+                    Spacer(Modifier.width(12.dp))
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 3.sp,
+                        color = colors.onBrandBrush
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = colors.onBrandBrush.copy(alpha = 0.75f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.widthIn(max = 220.dp)
+                    )
+                }
             }
-            if (version != null && versions.size > 1) {
+            if (busy || otherVersions.isNotEmpty()) {
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
@@ -379,16 +439,20 @@ private fun HeroPlayButton(
                 Box(
                     modifier = Modifier
                         .fillMaxHeight()
-                        .clickable(role = Role.Button) { menuOpen = true }
+                        .clickable(role = Role.Button) { if (busy) onCancel() else menuOpen = true }
                         .padding(horizontal = 10.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        modifier = Modifier.size(24.dp),
-                        painter = painterResource(R.drawable.ic_arrow_drop_down_rounded),
-                        contentDescription = stringResource(R.string.home_hero_change),
-                        tint = colors.onBrandBrush
-                    )
+                    if (busy) {
+                        Text(text = "✕", color = colors.onBrandBrush, fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(
+                            modifier = Modifier.size(24.dp),
+                            painter = painterResource(R.drawable.ic_arrow_drop_down_rounded),
+                            contentDescription = stringResource(R.string.home_hero_change),
+                            tint = colors.onBrandBrush
+                        )
+                    }
                 }
             }
         }
@@ -396,18 +460,13 @@ private fun HeroPlayButton(
             expanded = menuOpen,
             onDismissRequest = { menuOpen = false }
         ) {
-            versions.forEach { item ->
+            otherVersions.forEach { item ->
                 DropdownMenuItem(
-                    text = {
-                        Text(
-                            text = item.getVersionName(),
-                            fontWeight = if (item == version) FontWeight.Bold else FontWeight.Normal
-                        )
-                    },
+                    text = { Text(text = "Jogar ${item.getVersionName()}") },
                     leadingIcon = { InstanceIconBox(version = item, size = 24.dp) },
                     onClick = {
                         menuOpen = false
-                        onSelectVersion(item)
+                        onPlayOther(item)
                     }
                 )
             }
@@ -545,91 +604,151 @@ private fun InstanceTile(
 }
 
 
-private val ClientCardShape = RoundedCornerShape(16.dp)
+private val ToolChipShape = RoundedCornerShape(12.dp)
 
-/**
- * Cartão do Zadrinth Client: se ainda não existe uma instância do client,
- * instala o Minecraft 1.8.9 com tudo pronto em um toque; se já existe, JOGAR.
- */
+/** Atalhos do client: modo celular fraco (resolução menor) e OptiFine. */
 @Composable
-private fun ZadrinthClientCard(
-    versions: List<Version>,
-    onPlay: (Version) -> Unit,
+private fun ZadrinthToolsRow(
+    clientVersion: Version?,
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
-    val state by ZadrinthClientInstaller.state.collectAsStateWithLifecycle()
-    val clientVersion = remember(versions) {
-        versions.firstOrNull { it.getVersionName() == ZadrinthClientMod.INSTANCE_NAME && ZadrinthClientMod.isSupported(it) }
-            ?: versions.firstOrNull { ZadrinthClientMod.isSupported(it) }
-    }
+    val ratio = AllSettings.resolutionRatio.state
+    val lowEnd = ratio <= LOW_END_RATIO
+    var optiFineOpen by remember { mutableStateOf(false) }
 
     Row(
-        modifier = modifier
-            .clip(ClientCardShape)
-            .background(
-                Brush.horizontalGradient(
-                    listOf(Color(0xFF1B1433), Color(0xFF2A1D55), Color(0xFF3A1F5C))
-                )
-            )
-            .border(1.dp, Color(0x669D7BFF), ClientCardShape)
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        Image(
-            painter = painterResource(R.drawable.zadrinth_client_logo),
-            contentDescription = null,
-            modifier = Modifier.size(56.dp)
+        ToolChip(
+            text = if (lowEnd) "⚡ Modo celular fraco: LIGADO" else "⚡ Modo celular fraco",
+            active = lowEnd,
+            onClick = {
+                val value = if (lowEnd) 100 else LOW_END_RATIO
+                AllSettings.resolutionRatio.updateState(value)
+                AllSettings.resolutionRatio.save(value)
+                Toast.makeText(
+                    context,
+                    if (lowEnd) "Resolução normal (100%)" else "Resolução em $LOW_END_RATIO%: mais FPS. Ligue também o FPS Boost no menu do client.",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
         )
-        Spacer(Modifier.width(14.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = "ZADRINTH CLIENT 1.8.9",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                letterSpacing = 1.sp,
-                color = Color.White
-            )
-            val subtitle = when (val current = state) {
-                is ZadrinthClientInstaller.State.Working -> "Instalando o Minecraft 1.8.9 com o client... (pode levar alguns minutos)"
-                is ZadrinthClientInstaller.State.Failed -> "Não deu certo: ${current.message}"
-                else -> if (clientVersion != null) {
-                    "Mods de PvP, HUD, zoom e cosméticos já embutidos. É só jogar."
+        ToolChip(
+            text = if (clientVersion != null && OptiFineSupport.hasOptiFine(clientVersion) && OptiFineSupport.hasOptiFabric(clientVersion)) "OptiFine: instalado" else "OptiFine",
+            active = false,
+            onClick = {
+                if (clientVersion == null) {
+                    Toast.makeText(context, "Instale o Zadrinth Client primeiro", Toast.LENGTH_SHORT).show()
                 } else {
-                    "O client de PvP do Zadrinth: instala tudo pronto, em um toque."
+                    optiFineOpen = true
                 }
             }
-            Text(
-                text = subtitle,
-                style = MaterialTheme.typography.bodySmall,
-                color = if (state is ZadrinthClientInstaller.State.Failed) Color(0xFFFCA5A5) else Color.White.copy(alpha = 0.72f),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis
-            )
+        )
+    }
+
+    if (optiFineOpen && clientVersion != null) {
+        OptiFineDialog(version = clientVersion, onDismiss = { optiFineOpen = false })
+    }
+}
+
+private const val LOW_END_RATIO = 60
+
+@Composable
+private fun ToolChip(text: String, active: Boolean, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .clip(ToolChipShape)
+            .background(if (active) Color(0x559D7BFF) else Color(0x22FFFFFF))
+            .border(1.dp, if (active) Color(0xFF9D7BFF) else Color(0x33FFFFFF), ToolChipShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        Text(text = text, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+    }
+}
+
+@Composable
+private fun OptiFineDialog(version: Version, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var status by remember { mutableStateOf("") }
+    var busy by remember { mutableStateOf(false) }
+    var refresh by remember { mutableStateOf(0) }
+    val hasFabric = remember(refresh) { OptiFineSupport.hasOptiFabric(version) }
+    val hasOptiFine = remember(refresh) { OptiFineSupport.hasOptiFine(version) }
+
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+        busy = true
+        scope.launch {
+            status = runCatching { "Copiado: " + OptiFineSupport.importOptiFine(context, uri, version) }
+                .getOrElse { "Erro ao copiar: ${it.message}" }
+            busy = false
+            refresh++
         }
-        Spacer(Modifier.width(12.dp))
-        when {
-            state is ZadrinthClientInstaller.State.Working -> {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(22.dp),
-                        strokeWidth = 2.dp,
-                        color = Color(0xFFE07BFF)
-                    )
-                    TextButton(onClick = { ZadrinthClientInstaller.cancel() }) {
-                        Text(text = "Cancelar", color = Color.White.copy(alpha = 0.8f))
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Fechar") } },
+        title = { Text("OptiFine no Zadrinth Client") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Text("O OptiFine roda junto com o client. São 3 passos:")
+                OptiFineStep(
+                    done = hasFabric,
+                    text = "1. Baixar o OptiFabric (faz o OptiFine funcionar no client)",
+                    button = "Baixar",
+                    enabled = !busy
+                ) {
+                    busy = true
+                    scope.launch {
+                        status = runCatching { "Baixado: " + OptiFineSupport.installOptiFabric(version) }
+                            .getOrElse { "Erro ao baixar: ${it.message}" }
+                        busy = false
+                        refresh++
                     }
                 }
-            }
-            clientVersion != null -> ModrinthBrandButton(onClick = { onPlay(clientVersion) }) {
-                Text(text = "JOGAR", fontWeight = FontWeight.Bold)
-            }
-            else -> ModrinthBrandButton(onClick = { ZadrinthClientInstaller.install(context) }) {
-                Text(
-                    text = if (state is ZadrinthClientInstaller.State.Failed) "TENTAR DE NOVO" else "INSTALAR",
-                    fontWeight = FontWeight.Bold
-                )
+                OptiFineStep(
+                    done = hasOptiFine,
+                    text = "2. No site oficial, baixe o \"OptiFine 1.8.9 HD U M5\" (o OptiFine não pode vir dentro do app)",
+                    button = "Abrir site",
+                    enabled = true
+                ) {
+                    runCatching {
+                        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(OptiFineSupport.DOWNLOAD_PAGE)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+                    }
+                }
+                OptiFineStep(
+                    done = hasOptiFine,
+                    text = "3. Escolha o arquivo .jar que você baixou",
+                    button = "Escolher",
+                    enabled = !busy
+                ) { picker.launch("*/*") }
+                if (status.isNotEmpty()) Text(text = status, fontSize = 12.sp)
+                if (hasFabric && hasOptiFine) {
+                    Text(
+                        text = "Pronto! O OptiFine vai abrir junto na próxima vez que você jogar. O zoom do OptiFine fica na tecla C.",
+                        fontSize = 12.sp,
+                        color = Color(0xFF4ADE80)
+                    )
+                }
             }
         }
+    )
+}
+
+@Composable
+private fun OptiFineStep(done: Boolean, text: String, button: String, enabled: Boolean, onClick: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = (if (done) "✔ " else "") + text,
+            modifier = Modifier.weight(1f),
+            fontSize = 13.sp
+        )
+        Spacer(Modifier.width(8.dp))
+        TextButton(onClick = onClick, enabled = enabled) { Text(button) }
     }
 }

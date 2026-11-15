@@ -5,6 +5,7 @@ import io.github.frostmta.zadrinth.client.ZadrinthClient;
 import io.github.frostmta.zadrinth.client.config.ZadrinthConfig;
 import io.github.frostmta.zadrinth.client.module.hud.HudModule;
 import io.github.frostmta.zadrinth.client.module.impl.ArmorModule;
+import io.github.frostmta.zadrinth.client.module.impl.AutoClickerModule;
 import io.github.frostmta.zadrinth.client.module.impl.ClockModule;
 import io.github.frostmta.zadrinth.client.module.impl.ComboModule;
 import io.github.frostmta.zadrinth.client.module.impl.CoordinatesModule;
@@ -12,6 +13,7 @@ import io.github.frostmta.zadrinth.client.module.impl.CosmeticsModule;
 import io.github.frostmta.zadrinth.client.module.impl.CpsModule;
 import io.github.frostmta.zadrinth.client.module.impl.CrosshairModule;
 import io.github.frostmta.zadrinth.client.module.impl.DirectionModule;
+import io.github.frostmta.zadrinth.client.module.impl.FpsBoostModule;
 import io.github.frostmta.zadrinth.client.module.impl.FpsModule;
 import io.github.frostmta.zadrinth.client.module.impl.FreelookModule;
 import io.github.frostmta.zadrinth.client.module.impl.FullbrightModule;
@@ -42,6 +44,7 @@ public final class ModuleManager {
 
 	private static final List<Module> MODULES = Collections.unmodifiableList(Arrays.asList(
 			new ArmorModule(),
+			new AutoClickerModule(),
 			new DirectionModule(),
 			new ComboModule(),
 			new CoordinatesModule(),
@@ -49,6 +52,7 @@ public final class ModuleManager {
 			new CpsModule(),
 			new ServerAddressModule(),
 			new FpsModule(),
+			new FpsBoostModule(),
 			new FreelookModule(),
 			new FullbrightModule(),
 			new HitboxModule(),

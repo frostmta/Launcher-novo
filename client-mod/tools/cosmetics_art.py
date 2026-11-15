@@ -753,3 +753,199 @@ def main():
 
 
 main()
+
+
+# ------------------------------------------------------------------ capas animadas
+ANIM_FRAMES = 12
+
+
+def anim_vortex(t):
+    """Galáxia em espiral girando (2 braços: meia volta fecha o loop)."""
+    yy, xx = np.mgrid[0:FH, 0:FW].astype(np.float32)
+    cx, cy = 20.0, 28.0
+    dx, dy = xx - cx, (yy - cy) * 0.8
+    r = np.sqrt(dx * dx + dy * dy) + 1e-3
+    ang = np.arctan2(dy, dx) - t * math.pi
+    arm = 0.5 + 0.5 * np.cos(2 * (ang - np.log(r) * 2.2))
+    fall = np.clip(1 - r / 30.0, 0, 1)
+    sky = ramp([(0, '#04020d'), (1, '#0c0626')], yy / FH)
+    glow = (arm ** 3) * fall
+    sky += glow[..., None] * hexrgb('#b56cff') * 0.9
+    sky += (arm ** 8 * fall)[..., None] * hexrgb('#6fd3ff') * 0.8
+    core = np.clip(1 - r / 6.0, 0, 1) ** 2
+    sky += core[..., None] * hexrgb('#fff0ff') * 1.2
+    rng = np.random.default_rng(101)
+    for _ in range(40):  # estrelas piscando
+        x, y, ph = rng.integers(1, FW - 1), rng.integers(1, FH - 1), rng.random()
+        b = 0.5 + 0.5 * math.sin(2 * math.pi * (t + ph))
+        sky[y, x] = np.maximum(sky[y, x], 140 + 115 * b)
+    return trim(sky, '#9d7bff'), lining('#100a26', 102), hexrgb('#2a1d55')
+
+
+def anim_inferno(t):
+    """Fogo subindo (ruído periódico rolando para cima)."""
+    P = 128
+    noise = periodic_noise(FW, P, 8, 12, 111, 3, 0.6)
+    yy = np.mgrid[0:FH, 0:FW][0].astype(np.float32)
+    rows = (np.arange(FH) + int(t * P)) % P
+    n = noise[rows]
+    base = 1 - yy / FH
+    f = np.clip((1 - base) * 1.25 + (n - 0.5) * 0.9 - 0.25, 0, 1)
+    sky = ramp([(0, '#120303'), (1, '#2a0606')], yy / FH)
+    col = ramp([(0, '#3a0500'), (0.35, '#b81d06'), (0.65, '#ff7a12'), (0.88, '#ffd25a'), (1, '#fff6d8')], f)
+    sky = np.where((f > 0.12)[..., None], col, sky)
+    rng = np.random.default_rng(112)
+    for _ in range(18):  # brasas subindo
+        x0, y0 = rng.integers(0, FW), rng.integers(0, FH)
+        y = int((y0 - t * FH) % FH)
+        sky[y, x0] = np.maximum(sky[y, x0], hexrgb('#ffcf6a'))
+    return trim(sky, '#ff7a12'), lining('#1c0505', 113), hexrgb('#5c1414')
+
+
+def anim_aurora(t):
+    """Aurora com as cortinas se mexendo."""
+    ys = np.linspace(0, 1, FH)[:, None] * np.ones((1, FW))
+    sky = ramp([(0, '#02040d'), (0.6, '#0b1a33'), (1, '#10273f')], ys)
+    rng = np.random.default_rng(121)
+    for _ in range(36):
+        x, y, ph = rng.integers(0, FW), rng.integers(0, 40), rng.random()
+        b = 0.5 + 0.5 * math.sin(2 * math.pi * (t + ph))
+        sky[y, x] = np.maximum(sky[y, x], 110 + 120 * b)
+    xs = np.arange(FW)
+    streak = value_noise(FW, 1, 1.5, 122, 2)[0]
+    p = 2 * math.pi * t
+    for k, (col, off, amp) in enumerate((('#38f2a0', 15, 5), ('#36c9e6', 21, 4), ('#9d6bff', 10, 3))):
+        center = off + amp * np.sin(xs / 6.0 + k * 1.7 + p * (k + 1))
+        for x in range(FW):
+            top = int(center[x]) - 10
+            s = 0.55 + 0.45 * (0.5 + 0.5 * math.sin(p + x * 0.4 + k))
+            for y in range(max(0, top), min(FH, int(center[x]) + 2)):
+                tt = (y - top) / 12
+                sky[y, x] += hexrgb(col) * (tt ** 1.6) * (0.5 + 0.5 * streak[x]) * s * (0.9 if k == 0 else 0.6)
+    far = ridge(FW, 50, 13, 123, 0.55)
+    for x in range(FW):
+        for y in range(int(far[x]), FH):
+            sky[y, x] = hexrgb('#0e1a2c') if y > far[x] + 1 else hexrgb('#9fb6d6')
+    return trim(sky, '#2fd3a0'), lining('#0b1626', 124), hexrgb('#173a4a')
+
+
+def anim_storm(t):
+    """Tempestade: nuvens, chuva caindo e um raio em alguns quadros."""
+    k = int(round(t * ANIM_FRAMES))
+    P = 64
+    clouds = periodic_noise(FW * 2, P, 8, 4, 131, 4, 0.55)
+    yy, xx = np.mgrid[0:FH, 0:FW].astype(np.float32)
+    shift = int(t * FW * 2)
+    c = clouds[:, ((np.arange(FW) + shift) % (FW * 2))]
+    c = np.vstack([c, c])[:FH]
+    sky = ramp([(0, '#0a0d16'), (1, '#161c2c')], yy / FH)
+    sky += np.clip((c - 0.45) * 2, 0, 1)[..., None] * hexrgb('#3a4560') * (1 - yy / FH)[..., None] * 1.4
+    flash = k in (3, 4, 9)
+    if flash:
+        sky = sky * 0.55 + hexrgb('#c8d8ff') * 0.45 * (1 - yy / FH)[..., None]
+        bolt_x = 14 if k < 6 else 27
+        x = bolt_x
+        rng = np.random.default_rng(132 + k)
+        for y in range(6, 54):
+            x = int(np.clip(x + rng.integers(-1, 2), 2, FW - 3))
+            sky[y, x] = hexrgb('#ffffff')
+            sky[y, x + 1] = hexrgb('#cfe0ff')
+    rng = np.random.default_rng(133)
+    for _ in range(40):  # chuva
+        x0, y0 = rng.integers(0, FW), rng.integers(0, FH)
+        y = int((y0 + t * FH * 2) % FH)
+        for j in range(3):
+            yj, xj = y + j, x0 - j // 2
+            if 0 <= yj < FH and 0 <= xj < FW:
+                sky[yj, xj] = sky[yj, xj] * 0.5 + hexrgb('#8fb0e0') * 0.5
+    return trim(sky, '#6e8bd6'), lining('#0b0f1a', 134), hexrgb('#1c2540')
+
+
+def anim_tide(t):
+    """Maré: ondas rolando sob a lua cheia."""
+    yy, xx = np.mgrid[0:FH, 0:FW].astype(np.float32)
+    sky = ramp([(0, '#050b1e'), (0.45, '#10204a'), (1, '#0a1838')], yy / FH)
+    sky = add_glow(sky, 26, 14, 14, '#bcd2ff', 45)
+    d = np.sqrt((xx - 26) ** 2 + (yy - 14) ** 2)
+    moon = d <= 5
+    sky[moon] = ramp([(0, '#ffffff'), (1, '#c9d8ff')], d / 5)[moon]
+    p = 2 * math.pi * t
+    for row in range(5):
+        base = 30 + row * 7
+        amp = 1.5 + row * 0.4
+        col = lerp(hexrgb('#1b4a9e'), hexrgb('#08214f'), row / 5)
+        foam = lerp(hexrgb('#9fdcff'), hexrgb('#3d7fd6'), row / 5)
+        for x in range(FW):
+            y = int(base + amp * math.sin(x / (3.5 + row) + p + row * 1.3))
+            sky[y:, x] = col
+            if 0 <= y < FH:
+                sky[y, x] = foam
+    for y in range(30, FH):  # reflexo da lua
+        w = int(2 + (y - 30) * 0.08)
+        shimmer = 0.5 + 0.5 * math.sin(y * 0.9 + p * 2)
+        sky[y, 26 - w:26 + w] = sky[y, 26 - w:26 + w] * 0.6 + hexrgb('#d8e6ff') * 0.4 * shimmer
+    return trim(sky, '#4f9bff'), lining('#06122a', 141), hexrgb('#0c2a58')
+
+
+def anim_prism(t):
+    """Prisma RGB: faixas de arco-íris correndo na diagonal + cristal do Zadrinth."""
+    yy, xx = np.mgrid[0:FH, 0:FW].astype(np.float32)
+    h = ((xx + yy) / 48.0 - t) % 1.0
+    rgb = np.zeros((FH, FW, 3), np.float32)
+    for i in range(6):
+        sel = (h * 6 >= i) & (h * 6 < i + 1)
+        f = h * 6 - i
+        stops = [(1, f, 0), (1 - f, 1, 0), (0, 1, f), (0, 1 - f, 1), (f, 0, 1), (1, 0, 1 - f)][i]
+        for c in range(3):
+            rgb[..., c] = np.where(sel, stops[c] if not isinstance(stops[c], np.ndarray) else stops[c], rgb[..., c])
+    sky = (rgb * 0.75 + 0.15) * 255 * 0.85
+    sky = sky * 0.55 + hexrgb('#120d26') * 0.45
+    sky = draw_crystal(sky, 20, 30, 9)
+    return trim(sky, '#ffffff', 2), lining('#120d26', 151), hexrgb('#3a2a77')
+
+
+def anim_digital(t):
+    """Chuva digital: colunas de símbolos verdes caindo."""
+    sky = np.zeros((FH, FW, 3), np.float32) + hexrgb('#020805')
+    rng = np.random.default_rng(161)
+    glyphs = rng.random((FH, FW)) > 0.45
+    for col in range(0, FW, 3):
+        speed = rng.integers(1, 3)
+        length = rng.integers(14, 30)
+        head = int((rng.integers(0, FH) + t * FH * speed) % (FH + length))
+        for j in range(length):
+            y = head - j
+            if 0 <= y < FH:
+                b = 1 - j / length
+                for x in (col, col + 1):
+                    if x < FW and glyphs[y, x]:
+                        sky[y, x] = hexrgb('#d8ffe0') if j == 0 else hexrgb('#22e06a') * (0.25 + 0.75 * b)
+    return trim(sky, '#22e06a'), lining('#031208', 162), hexrgb('#0c3a1c')
+
+
+ANIM_CAPES = [
+    ('vortice', anim_vortex), ('inferno', anim_inferno), ('aurora_viva', anim_aurora),
+    ('tempestade', anim_storm), ('mare', anim_tide), ('prisma', anim_prism), ('chuva_digital', anim_digital),
+]
+
+
+def build_anim_capes(out_dir, preview=None):
+    os.makedirs(os.path.join(out_dir, 'capes'), exist_ok=True)
+    sheet = []
+    for cid, fn in ANIM_CAPES:
+        frames = []
+        for k in range(ANIM_FRAMES):
+            face, inner, edge = fn(k / ANIM_FRAMES)
+            frames.append(cape_texture(face, inner, edge))
+            if k in (0, 4, 8):
+                sheet.append(to_img(face))
+        tall = Image.new('RGBA', (256, 128 * ANIM_FRAMES), (0, 0, 0, 0))
+        for k, f in enumerate(frames):
+            tall.paste(f, (0, 128 * k))
+        tall.save(os.path.join(out_dir, 'capes', f'{cid}.png'), optimize=True)
+    if preview:
+        img = Image.new('RGBA', (len(sheet) * 90, 140), (22, 20, 30, 255))
+        for i, f in enumerate(sheet):
+            img.alpha_composite(f.resize((80, 128), Image.NEAREST), (i * 90 + 5, 6))
+        img.save(preview)
+    print('animated capes', len(ANIM_CAPES))

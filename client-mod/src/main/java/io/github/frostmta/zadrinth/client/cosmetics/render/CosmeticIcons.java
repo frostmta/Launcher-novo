@@ -38,7 +38,7 @@ public final class CosmeticIcons {
 			}
 			int cx = x + (w - cw) / 2, cy = y + (h - ch) / 2;
 			client.getTextureManager().bindTexture(texture);
-			quad(cx, cy, cx + cw, cy + ch, 1 / 64.0F, 1 / 32.0F, 11 / 64.0F, 17 / 32.0F);
+			quad(cx, cy, cx + cw, cy + ch, 1 / 64.0F, frameV + f / 32.0F, 11 / 64.0F, frameV + f * 17 / 32.0F);
 		} else if (cosmetic.type == CosmeticType.WINGS) {
 			int size = Math.min(w / 2, h);
 			int cx = x + w / 2, cy = y + (h - size) / 2;

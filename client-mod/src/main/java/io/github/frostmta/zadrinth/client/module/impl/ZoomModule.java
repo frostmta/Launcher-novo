@@ -50,6 +50,10 @@ public final class ZoomModule extends Module {
 				//descarta os toques enquanto o zoom está desligado
 			}
 		}
+		//Com OptiFine o zoom dele já fica na tecla C: o nosso não briga com ele
+		if (io.github.frostmta.zadrinth.client.compat.OptiFineCompat.present() && ZadrinthKeys.ZOOM.getCode() == 46) {
+			active = false;
+		}
 		if (active && !zooming) scrollFactor = 1.0F;
 		zooming = active;
 		target = zooming ? factor.value() * scrollFactor : 1.0F;
