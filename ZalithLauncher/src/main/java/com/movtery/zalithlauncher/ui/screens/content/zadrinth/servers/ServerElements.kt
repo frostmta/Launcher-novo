@@ -80,7 +80,12 @@ fun rememberFeaturedServers(): Pair<List<FeaturedServer>, Map<String, FeaturedSe
 fun rememberQuickJoinVersion(): Version? {
     val versions by VersionsManager.versions.collectAsStateWithLifecycle()
     val current by VersionsManager.currentVersion.collectAsStateWithLifecycle()
-    return current?.takeIf { it.isValid() } ?: versions.firstOrNull { it.isValid() }
+    //Entra nos servidores com o Zadrinth Client sempre que ele estiver instalado
+    return versions.firstOrNull {
+        it.isValid() && it.getVersionName() == com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod.INSTANCE_NAME &&
+            com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod.isSupported(it)
+    } ?: versions.firstOrNull { it.isValid() && com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod.isSupported(it) }
+    ?: current?.takeIf { it.isValid() } ?: versions.firstOrNull { it.isValid() }
 }
 
 /**
