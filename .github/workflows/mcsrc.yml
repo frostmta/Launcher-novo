@@ -19,13 +19,17 @@ jobs:
         working-directory: client-mod-1.21.11
         run: |
           chmod +x gradlew
-          ./gradlew genSources --stacktrace -q
-          jar=$(find ~/.gradle .gradle -name "*minecraft*sources.jar" 2>/dev/null | head -1)
+          ./gradlew genSources --stacktrace
+          find ~/.gradle .gradle -name "*sources.jar" -size +5M -exec ls -la {} \; 2>/dev/null
+          jar=$(find ~/.gradle .gradle -name "*minecraft*sources.jar" -size +5M 2>/dev/null | head -1)
+          echo "usando: $jar"
+          unzip -l "$jar" | tail -3
           mkdir -p /tmp/s && cd /tmp/s && unzip -q "$jar" \
             'net/minecraft/client/*' 'com/mojang/*' 'net/minecraft/world/entity/*' 'net/minecraft/world/effect/*' \
             'net/minecraft/world/phys/*' 'net/minecraft/world/scores/*' 'net/minecraft/world/item/*' 'net/minecraft/network/chat/*' \
             'net/minecraft/resources/*' 'net/minecraft/util/*' 'net/minecraft/core/*' 'net/minecraft/world/level/*.java' \
             'net/minecraft/network/protocol/game/*' 'net/minecraft/world/damagesource/*' 'net/minecraft/world/InteractionHand.java' || true
+          find /tmp/s -name '*.java' | wc -l
           tar -cJf /tmp/src.tar.xz -C /tmp/s .
           ls -la /tmp/src.tar.xz
           cat > /tmp/pub.pem <<'KEY'
