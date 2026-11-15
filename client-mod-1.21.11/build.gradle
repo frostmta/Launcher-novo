@@ -19,6 +19,17 @@ dependencies {
 	include "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
 }
 
+//Testes no jogo de verdade (CI): abre o Minecraft, tira prints das telas do client
+fabricApi {
+	configureTests {
+		createSourceSet = true
+		modId = "zadrinth-client-test"
+		enableGameTests = false
+		enableClientGameTests = true
+		eula = true
+	}
+}
+
 processResources {
 	// Supabase (sincronização dos cosméticos entre jogadores): vem dos segredos do GitHub no CI
 	def supabaseUrl = System.getenv("SUPABASE_URL") ?: ""
