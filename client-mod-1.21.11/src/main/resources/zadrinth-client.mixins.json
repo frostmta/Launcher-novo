@@ -3,7 +3,20 @@
   "minVersion": "0.8",
   "package": "io.github.frostmta.zadrinth.client.mixin",
   "compatibilityLevel": "JAVA_21",
-  "client": [],
+  "client": [
+    "AvatarRendererMixin",
+    "CameraMixin",
+    "EntityMixin",
+    "EntityRenderDispatcherMixin",
+    "GameRendererMixin",
+    "KeyMappingMixin",
+    "LevelMixin",
+    "LightTextureMixin",
+    "MinecraftMixin",
+    "MouseHandlerMixin",
+    "MultiPlayerGameModeMixin",
+    "PlayerTabOverlayMixin"
+  ],
   "injectors": {
     "defaultRequire": 1
   }
