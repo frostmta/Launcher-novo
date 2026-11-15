@@ -11,7 +11,7 @@ import java.util.List;
 
 public final class MemoryModule extends TextHudModule {
 	public MemoryModule() {
-		super("memory", "Memória", "Quanto da memória do jogo está em uso.", Category.HUD, Icon.CHIP, false, 0.005f, 0.60f);
+		super("memory", "Memória", "Quanto da memória do jogo está em uso.", Category.HUD, Icon.CHIP, false, 0.005f, 0.73f);
 	}
 
 	@Override

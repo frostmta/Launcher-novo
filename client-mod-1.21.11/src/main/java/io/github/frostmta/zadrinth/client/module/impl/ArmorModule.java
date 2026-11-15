@@ -28,7 +28,7 @@ public final class ArmorModule extends HudModule {
 	private final BoolSetting colorByDamage = add(new BoolSetting("colorByDamage", "Cor pela durabilidade", true));
 
 	public ArmorModule() {
-		super("armor", "Armor HUD", "Sua armadura e a durabilidade dela.", Category.HUD, Icon.SHIELD, true, 0.005f, 0.70f);
+		super("armor", "Armor HUD", "Sua armadura e a durabilidade dela.", Category.HUD, Icon.SHIELD, true, 1.0f, 1.0f);
 	}
 
 	private List<ItemStack> items(Minecraft client, boolean editing) {

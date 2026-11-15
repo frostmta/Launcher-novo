@@ -16,7 +16,7 @@ public final class ClockModule extends TextHudModule {
 	private final ModeSetting format = add(new ModeSetting("format", "Formato", 0, "24 horas", "12 horas"));
 
 	public ClockModule() {
-		super("clock", "Relógio", "A hora do seu celular.", Category.HUD, Icon.CLOCK, false, 0.005f, 0.54f);
+		super("clock", "Relógio", "A hora do seu celular.", Category.HUD, Icon.CLOCK, false, 0.005f, 0.66f);
 	}
 
 	@Override

@@ -11,7 +11,7 @@ import java.util.List;
 
 public final class PingModule extends TextHudModule {
 	public PingModule() {
-		super("ping", "Ping", "Seu ping no servidor.", Category.HUD, Icon.WIFI, true, 0.005f, 0.42f);
+		super("ping", "Ping", "Seu ping no servidor.", Category.HUD, Icon.WIFI, true, 0.005f, 0.52f);
 	}
 
 	@Override

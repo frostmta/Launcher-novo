@@ -11,7 +11,7 @@ import java.util.List;
 
 public final class FpsModule extends TextHudModule {
 	public FpsModule() {
-		super("fps", "FPS", "Quadros por segundo.", Category.HUD, Icon.BARS, true, 0.005f, 0.30f);
+		super("fps", "FPS", "Quadros por segundo.", Category.HUD, Icon.BARS, true, 0.005f, 0.38f);
 	}
 
 	@Override

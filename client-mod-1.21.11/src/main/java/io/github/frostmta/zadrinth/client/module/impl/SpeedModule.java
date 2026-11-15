@@ -14,7 +14,7 @@ public final class SpeedModule extends TextHudModule {
 	private float speed;
 
 	public SpeedModule() {
-		super("speed", "Velocímetro", "Sua velocidade em blocos por segundo.", Category.HUD, Icon.GAUGE, false, 0.005f, 0.66f);
+		super("speed", "Velocímetro", "Sua velocidade em blocos por segundo.", Category.HUD, Icon.GAUGE, false, 0.005f, 0.8f);
 	}
 
 	@Override

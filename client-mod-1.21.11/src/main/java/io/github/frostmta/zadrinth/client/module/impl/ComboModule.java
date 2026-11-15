@@ -12,7 +12,7 @@ import java.util.List;
 
 public final class ComboModule extends TextHudModule {
 	public ComboModule() {
-		super("combo", "Combo", "Golpes seguidos sem apanhar.", Category.PVP, Icon.BOLT, false, 0.005f, 0.78f);
+		super("combo", "Combo", "Golpes seguidos sem apanhar.", Category.PVP, Icon.BOLT, false, 0.175f, 0.32f);
 	}
 
 	@Override

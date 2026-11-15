@@ -253,8 +253,8 @@ public class ShopScreen extends ZScreen {
 		ZadrinthConfig config = ZadrinthConfig.get();
 		int optionsY = py + ph - GAP - 44;
 		Ui.fill(x + 6, optionsY - 6, x + RAIL_W - 6, optionsY - 5, Ui.BORDER);
-		checkbox(x + 6, optionsY, "Capa de tecido", config.clothCape, mouseX, mouseY);
-		checkbox(x + 6, optionsY + 18, "Ver dos outros", config.showOthersCosmetics, mouseX, mouseY);
+		checkbox(x + 6, optionsY, "Capa tecido", config.clothCape, mouseX, mouseY);
+		checkbox(x + 6, optionsY + 18, "Ver outros", config.showOthersCosmetics, mouseX, mouseY);
 	}
 
 	private int count(Category value) {

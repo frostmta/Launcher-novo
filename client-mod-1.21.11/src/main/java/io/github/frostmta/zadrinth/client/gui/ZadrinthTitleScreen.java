@@ -113,11 +113,10 @@ public class ZadrinthTitleScreen extends ZScreen {
 
 		if (showModel) drawPlayer(mouseX, mouseY, seconds);
 
-		//Símbolo e nome
+		//Símbolo (com um brilho suave pulsando atrás) e nome
 		float pulse = (float) (Math.sin(seconds * 1.4) * 0.5 + 0.5);
 		int cx = colX + colW / 2;
-		int glow = ((int) (0x28 + 0x28 * pulse) << 24) | 0x9D7BFF;
-		Ui.gradient(cx - logoSize, logoY + logoSize / 3, cx + logoSize, logoY + logoSize + 2, 0x00000000, glow);
+		glow(cx, logoY + logoSize / 2, logoSize * 0.75F, 0.10F + 0.10F * pulse);
 		Ui.logo(cx - logoSize / 2, logoY, logoSize);
 		Ui.centered("§lZ A D R I N T H   C L I E N T", cx, logoY + logoSize + 4, Ui.TEXT);
 
@@ -192,6 +191,21 @@ public class ZadrinthTitleScreen extends ZScreen {
 		Quaternionf camera = new Quaternionf().rotateX(8.0F * (float) (Math.PI / 180.0));
 		Quaternionf rotation = new Quaternionf().rotateZ((float) Math.PI).mul(camera);
 		Ui.g().submitEntityRenderState(state, scale, new Vector3f(0.0F, 0.95F, 0.0F), rotation, camera, x0, top, x1, modelFeetY + 4);
+	}
+
+	/** Brilho redondo e suave (anéis cada vez mais transparentes). */
+	private static void glow(int cx, int cy, float radius, float strength) {
+		int steps = 14;
+		for (int i = steps; i >= 1; i--) {
+			float r = radius * i / steps;
+			int alpha = Math.round(255 * strength * (1.0F - (float) i / (steps + 1)) / 3.0F);
+			if (alpha <= 0) continue;
+			int ri = Math.round(r);
+			for (int dy = -ri; dy <= ri; dy += 2) {
+				int half = (int) Math.sqrt(Math.max(0, r * r - dy * dy));
+				Ui.fill(cx - half, cy + dy, cx + half, cy + dy + 2, (alpha << 24) | 0x9D7BFF);
+			}
+		}
 	}
 
 	/** Pontinhos nas cores da marca subindo devagar (sem estado: só o tempo). */

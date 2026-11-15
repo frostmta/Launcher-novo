@@ -122,7 +122,7 @@ jobs:
           if-no-files-found: error
 
   build:
-    needs: client-mod
+    needs: [client-mod, client-mod-modern]
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     strategy:
@@ -148,11 +148,19 @@ jobs:
           name: zadrinth-client-mod
           path: client-mod-jar
 
+      - name: Download Zadrinth Client mod (1.21.11)
+        uses: actions/download-artifact@v8
+        with:
+          name: zadrinth-client-mod-1.21.11
+          path: client-mod-modern-jar
+
       - name: Put mod into the APK assets
         run: |
           jar=$(ls client-mod-jar/zadrinth-client-*.jar | grep -v sources | head -1)
           mkdir -p ZalithLauncher/src/main/assets/client
           cp "$jar" ZalithLauncher/src/main/assets/client/zadrinth-client.jar
+          modern=$(ls client-mod-modern-jar/zadrinth-client-1.21.11-*.jar | grep -v sources | head -1)
+          cp "$modern" ZalithLauncher/src/main/assets/client/zadrinth-client-1.21.11.jar
           ls -la ZalithLauncher/src/main/assets/client
 
       - name: Set up JDK 21

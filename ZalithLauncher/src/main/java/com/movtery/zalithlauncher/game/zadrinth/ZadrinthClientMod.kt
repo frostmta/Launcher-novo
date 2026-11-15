@@ -26,7 +26,30 @@ import com.movtery.zalithlauncher.utils.logging.Logger
 import java.io.File
 
 /**
- * O Zadrinth Client que roda dentro do jogo (client-mod/, Minecraft 1.8.9).
+ * Uma versão do Zadrinth Client: cada versão do Minecraft tem o seu .jar.
+ */
+enum class ClientTarget(
+    /** Versão do Minecraft */
+    val minecraft: String,
+    /** Loader que a instância precisa ter */
+    val loader: ModLoader,
+    /** O .jar dentro do APK (assets/) */
+    val asset: String,
+    /** Nome do .jar extraído */
+    val fileName: String,
+    /** Texto curto para o seletor ("1.8.9 • PvP clássico") */
+    val tagline: String,
+) {
+    V1_8_9("1.8.9", ModLoader.LEGACY_FABRIC, "client/zadrinth-client.jar", "zadrinth-client.jar", "PvP clássico"),
+    V1_21_11("1.21.11", ModLoader.FABRIC, "client/zadrinth-client-1.21.11.jar", "zadrinth-client-1.21.11.jar", "Versão nova");
+
+    /** Nome da instância criada pelo botão "Instalar" */
+    val instanceName: String get() = "Zadrinth Client $minecraft"
+}
+
+/**
+ * O Zadrinth Client que roda dentro do jogo (client-mod/ para 1.8.9 e
+ * client-mod-1.21.11/ para 1.21.11).
  *
  * O CI compila o client e coloca o .jar dentro do APK (assets/client). Ele
  * NÃO vai para a pasta mods: ao abrir uma instância compatível, o launcher
@@ -37,33 +60,40 @@ import java.io.File
  */
 object ZadrinthClientMod {
     private const val TAG = "ZadrinthClientMod"
-    private const val ASSET_PATH = "client/zadrinth-client.jar"
     const val FILE_NAME = "zadrinth-client.jar"
     const val MINECRAFT_VERSION = "1.8.9"
 
-    /** Nome da instância criada pelo botão "Instalar Zadrinth Client" */
+    /** Nome da instância 1.8.9 criada pelo botão "Instalar Zadrinth Client" */
     const val INSTANCE_NAME = "Zadrinth Client 1.8.9"
 
     /** Pasta interna do Zadrinth (client extraído + cosmetics.json) */
     val homeDir: File get() = File(PathManager.DIR_FILES_PRIVATE, "zadrinth")
 
-    private val clientJar: File get() = File(homeDir, "client/$FILE_NAME")
+    private fun clientJar(target: ClientTarget) = File(homeDir, "client/${target.fileName}")
 
-    /** A instância roda o Zadrinth Client? (1.8.9 + Legacy Fabric) */
-    fun isSupported(version: Version): Boolean {
-        val info = version.getVersionInfo() ?: return false
-        return info.minecraftVersion == MINECRAFT_VERSION && info.hasLoader(ModLoader.LEGACY_FABRIC)
+    /** Qual versão do client roda nesta instância (null = nenhuma) */
+    fun targetOf(version: Version): ClientTarget? {
+        val info = version.getVersionInfo() ?: return null
+        return ClientTarget.entries.firstOrNull { info.minecraftVersion == it.minecraft && info.hasLoader(it.loader) }
     }
+
+    /** A instância roda o Zadrinth Client? */
+    fun isSupported(version: Version): Boolean = targetOf(version) != null
+
+    /** A instância do client para esta versão (a criada pelo botão, ou outra compatível) */
+    fun findInstance(versions: List<Version>, target: ClientTarget): Version? =
+        versions.firstOrNull { it.getVersionName() == target.instanceName && targetOf(it) == target }
+            ?: versions.firstOrNull { targetOf(it) == target }
 
     /**
      * Prepara o client para abrir esta instância.
      * @return o .jar para injetar com -Dfabric.addMods, ou null (instância sem suporte)
      */
     fun prepare(context: Context, version: Version): File? {
-        if (!isSupported(version)) return null
+        val target = targetOf(version) ?: return null
         return runCatching {
             val modsDir = File(version.getGameDir(), "mods")
-            if (File(modsDir, "$FILE_NAME.disabled").exists()) {
+            if (File(modsDir, "${target.fileName}.disabled").exists() || File(modsDir, "$FILE_NAME.disabled").exists()) {
                 Logger.info(TAG, "Zadrinth Client disabled for ${version.getVersionName()}")
                 return null
             }
@@ -72,21 +102,21 @@ object ZadrinthClientMod {
                 if (old.delete()) Logger.info(TAG, "Removed old copy from mods/")
             }
 
-            val bytes = context.assets.open(ASSET_PATH).use { it.readBytes() }
-            val target = clientJar
-            target.parentFile?.mkdirs()
-            val upToDate = target.isFile && target.length() == bytes.size.toLong() && target.readBytes().contentEquals(bytes)
+            val bytes = context.assets.open(target.asset).use { it.readBytes() }
+            val jar = clientJar(target)
+            jar.parentFile?.mkdirs()
+            val upToDate = jar.isFile && jar.length() == bytes.size.toLong() && jar.readBytes().contentEquals(bytes)
             if (!upToDate) {
-                val temp = File(target.parentFile, "$FILE_NAME.tmp")
+                val temp = File(jar.parentFile, "${target.fileName}.tmp")
                 temp.writeBytes(bytes)
-                if (!temp.renameTo(target)) {
-                    temp.copyTo(target, overwrite = true)
+                if (!temp.renameTo(jar)) {
+                    temp.copyTo(jar, overwrite = true)
                     temp.delete()
                 }
-                Logger.info(TAG, "Zadrinth Client extracted (${bytes.size} bytes)")
+                Logger.info(TAG, "Zadrinth Client ${target.minecraft} extracted (${bytes.size} bytes)")
             }
             homeDir.mkdirs()
-            target
+            jar
         }.onFailure { th ->
             Logger.warning(TAG, "Could not prepare the Zadrinth Client", th)
         }.getOrNull()

@@ -16,7 +16,7 @@ public final class CoordinatesModule extends TextHudModule {
 	private final BoolSetting oneLine = add(new BoolSetting("oneLine", "Em uma linha", false));
 
 	public CoordinatesModule() {
-		super("coordinates", "Coordenadas", "Sua posição X, Y e Z.", Category.HUD, Icon.PIN, false, 0.005f, 0.12f);
+		super("coordinates", "Coordenadas", "Sua posição X, Y e Z.", Category.HUD, Icon.PIN, false, 0.175f, 0.005f);
 	}
 
 	@Override

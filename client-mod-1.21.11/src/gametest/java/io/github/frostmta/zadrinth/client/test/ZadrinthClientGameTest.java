@@ -1,5 +1,6 @@
 package io.github.frostmta.zadrinth.client.test;
 
+import io.github.frostmta.zadrinth.client.ZadrinthClient;
 import io.github.frostmta.zadrinth.client.ZadrinthKeys;
 import io.github.frostmta.zadrinth.client.config.ZadrinthConfig;
 import io.github.frostmta.zadrinth.client.cosmetics.Cosmetic;
@@ -19,6 +20,7 @@ import net.fabricmc.fabric.api.client.gametest.v1.context.ClientGameTestContext;
 import net.fabricmc.fabric.api.client.gametest.v1.context.TestSingleplayerContext;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.gui.screens.PauseScreen;
+import net.minecraft.client.gui.screens.TitleScreen;
 import net.minecraft.client.gui.screens.worldselection.WorldCreationUiState;
 
 /**
@@ -111,6 +113,10 @@ public class ZadrinthClientGameTest implements FabricClientGameTest {
 			context.getInput().releaseKey(client -> client.keyPlayerList);
 		}
 		context.waitForScreen(ZadrinthTitleScreen.class);
+		context.takeScreenshot("17_tela_inicial_final");
+		//O teste do Fabric confere se terminou na tela inicial do jogo
+		context.runOnClient(client -> ZadrinthClient.vanillaTitleForTests = true);
+		context.setScreen(TitleScreen::new);
 	}
 
 	private static Module module(String id) {

@@ -80,12 +80,14 @@ fun rememberFeaturedServers(): Pair<List<FeaturedServer>, Map<String, FeaturedSe
 fun rememberQuickJoinVersion(): Version? {
     val versions by VersionsManager.versions.collectAsStateWithLifecycle()
     val current by VersionsManager.currentVersion.collectAsStateWithLifecycle()
-    //Entra nos servidores com o Zadrinth Client sempre que ele estiver instalado
-    return versions.firstOrNull {
-        it.isValid() && it.getVersionName() == com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod.INSTANCE_NAME &&
-            com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod.isSupported(it)
-    } ?: versions.firstOrNull { it.isValid() && com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod.isSupported(it) }
-    ?: current?.takeIf { it.isValid() } ?: versions.firstOrNull { it.isValid() }
+    //Entra nos servidores com o Zadrinth Client (na versão escolhida na tela inicial) sempre que ele estiver instalado
+    val valid = versions.filter { it.isValid() }
+    val target = com.movtery.zalithlauncher.game.zadrinth.ClientTarget.entries.firstOrNull {
+        it.name == com.movtery.zalithlauncher.setting.AllSettings.zadrinthClientVersion.state
+    } ?: com.movtery.zalithlauncher.game.zadrinth.ClientTarget.V1_8_9
+    return com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod.findInstance(valid, target)
+        ?: valid.firstOrNull { com.movtery.zalithlauncher.game.zadrinth.ZadrinthClientMod.isSupported(it) }
+        ?: current?.takeIf { it.isValid() } ?: valid.firstOrNull()
 }
 
 /**

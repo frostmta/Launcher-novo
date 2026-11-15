@@ -15,7 +15,7 @@ public final class CpsModule extends TextHudModule {
 	private final BoolSetting right = add(new BoolSetting("right", "Mostrar botão direito", true));
 
 	public CpsModule() {
-		super("cps", "CPS", "Cliques por segundo.", Category.HUD, Icon.MOUSE, true, 0.005f, 0.36f);
+		super("cps", "CPS", "Cliques por segundo.", Category.HUD, Icon.MOUSE, true, 0.005f, 0.45f);
 	}
 
 	@Override

@@ -87,9 +87,12 @@ public final class ZadrinthClient implements ClientModInitializer {
 		Presence.tick(client);
 	}
 
+	/** Só para os testes automáticos (o teste do Fabric precisa terminar na tela do jogo). */
+	public static boolean vanillaTitleForTests;
+
 	/** Usar a tela inicial do Zadrinth no lugar da do Minecraft. */
 	public static boolean customTitleScreen() {
-		return true;
+		return !vanillaTitleForTests;
 	}
 
 	private static Properties loadBuildProperties() {

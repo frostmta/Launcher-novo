@@ -13,7 +13,7 @@ import java.util.Locale;
 
 public final class ReachModule extends TextHudModule {
 	public ReachModule() {
-		super("reach", "Reach", "Distância do seu último golpe.", Category.PVP, Icon.REACH, false, 0.005f, 0.72f);
+		super("reach", "Reach", "Distância do seu último golpe.", Category.PVP, Icon.REACH, false, 0.175f, 0.25f);
 	}
 
 	@Override

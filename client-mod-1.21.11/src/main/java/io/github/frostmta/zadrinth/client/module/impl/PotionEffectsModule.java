@@ -31,7 +31,7 @@ public final class PotionEffectsModule extends HudModule {
 	private final BoolSetting blink = add(new BoolSetting("blink", "Piscar no fim (10s)", true));
 
 	public PotionEffectsModule() {
-		super("potions", "Efeitos de poção", "Seus efeitos ativos e quanto tempo falta.", Category.HUD, Icon.POTION, true, 0.005f, 0.50f);
+		super("potions", "Efeitos de poção", "Seus efeitos ativos e quanto tempo falta.", Category.HUD, Icon.POTION, true, 1.0f, 0.005f);
 	}
 
 	private record Row(Holder<MobEffect> effect, int amplifier, int duration, boolean infinite) {

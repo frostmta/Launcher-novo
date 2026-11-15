@@ -11,7 +11,7 @@ import java.util.List;
 
 public final class ServerAddressModule extends TextHudModule {
 	public ServerAddressModule() {
-		super("server", "Endereço do servidor", "Mostra em qual servidor você está.", Category.HUD, Icon.GLOBE, false, 0.005f, 0.48f);
+		super("server", "Endereço do servidor", "Mostra em qual servidor você está.", Category.HUD, Icon.GLOBE, false, 0.005f, 0.59f);
 	}
 
 	@Override
