@@ -43,7 +43,7 @@ public final class PreviewCosmetics {
 			Identifier texture = CosmeticTextures.get(wings, style.tinted());
 			if (texture != null) {
 				Frames.begin(wings);
-				WingsRenderer.renderPreview(model, texture, style, capeDrawn, seconds);
+				WingsRenderer.renderPreview(model, wings, texture, style, capeDrawn, seconds);
 				Frames.end(wings);
 			}
 		}

@@ -82,7 +82,7 @@ public final class CosmeticsFeatureRenderer implements FeatureRenderer {
 			Identifier texture = CosmeticTextures.get(wings, style.tinted());
 			if (texture != null) {
 				Frames.begin(wings);
-				WingsRenderer.render(player, model, anim, texture, style, capeDrawn);
+				WingsRenderer.render(player, model, anim, wings, texture, style, capeDrawn);
 				Frames.end(wings);
 			}
 		}

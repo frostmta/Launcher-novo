@@ -77,6 +77,27 @@ public class ZadrinthClientGameTest implements FabricClientGameTest {
 			context.runOnClient(client -> client.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
 			context.waitTicks(10);
 			context.takeScreenshot("09_cosmeticos_frente");
+			//Itens novos: capa de traço + asas de dragão 3D
+			context.runOnClient(client -> {
+				equip(CosmeticType.CAPE, "lamina_sagrada");
+				equip(CosmeticType.WINGS, "dragao_gelo");
+				client.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+			});
+			context.waitTicks(10);
+			context.takeScreenshot("09b_dragao_costas");
+			context.getInput().holdKeyFor(client -> client.keyUp, 25);
+			context.takeScreenshot("09c_dragao_andando");
+			context.runOnClient(client -> client.options.setCameraType(CameraType.THIRD_PERSON_FRONT));
+			context.waitTicks(10);
+			context.takeScreenshot("09d_dragao_frente");
+			context.runOnClient(client -> {
+				equip(CosmeticType.CAPE, "estrela_polar");
+				equip(CosmeticType.WINGS, "dragao_rubi");
+				client.player.setYRot(client.player.getYRot() + 35.0F);
+				client.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+			});
+			context.waitTicks(10);
+			context.takeScreenshot("09e_dragao_rubi_lado");
 			context.runOnClient(client -> client.options.setCameraType(CameraType.FIRST_PERSON));
 
 			//Zoom (C) e freelook (Alt)

@@ -1,6 +1,7 @@
 package io.github.frostmta.zadrinth.client.cosmetics.render;
 
 import com.mojang.blaze3d.platform.GlStateManager;
+import io.github.frostmta.zadrinth.client.cosmetics.Cosmetic;
 import io.github.frostmta.zadrinth.client.cosmetics.CosmeticStyle;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.AbstractClientPlayerEntity;
@@ -9,6 +10,9 @@ import net.minecraft.client.render.Tessellator;
 import net.minecraft.client.render.VertexFormats;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.util.Identifier;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Asas presas nas costas. Cada asa tem duas partes com uma "dobra" no meio
@@ -25,17 +29,25 @@ final class WingsRenderer {
 	private static final float JOINT_V = 0.38F;
 	private static final float HINGE_U = 0.44F;
 
+	//Asas 3D de blocos (dragão): maiores, ombro mais alto
+	private static final float VOXEL_SPAN = 24.0F;
+	private static final float VOXEL_HEIGHT = 24.0F;
+	private static final float VOXEL_JOINT_V = 0.30F;
+	private static final float VOXEL_HINGE_U = 0.42F;
+	private static final Map<String, VoxelWing> MESHES = new HashMap<>();
+
 	private WingsRenderer() {
 	}
 
-	static void render(AbstractClientPlayerEntity player, PlayerEntityModel model, AnimState anim, Identifier texture,
+	static void render(AbstractClientPlayerEntity player, PlayerEntityModel model, AnimState anim, Cosmetic cosmetic, Identifier texture,
 					   CosmeticStyle style, boolean behindCape) {
 		MinecraftClient.getInstance().getTextureManager().bindTexture(texture);
 		GlStateManager.pushMatrix();
 		if (player.isSneaking()) GlStateManager.translate(0.0F, 0.2F, 0.0F);
 		model.body.preRender(0.0625F);
 		GlStateManager.scale(0.0625F, 0.0625F, 0.0625F);
-		GlStateManager.translate(0.0F, 3.0F, behindCape ? 3.4F : 2.2F);
+		if (cosmetic != null && cosmetic.voxel) GlStateManager.translate(0.0F, 2.0F, behindCape ? 3.9F : 2.9F);
+		else GlStateManager.translate(0.0F, 3.0F, behindCape ? 3.4F : 2.2F);
 		GlStateManager.enableAlphaTest();
 		GlStateManager.alphaFunc(516, 0.1F);
 
@@ -47,11 +59,11 @@ final class WingsRenderer {
 		final float lift = (10.0F * anim.flap * (float) Math.sin(anim.wingPhase + 0.5F) - 4.0F) * open - 8.0F * anim.fold;
 
 		Glint.tint(style);
-		drawPair(sweep, bend, lift);
+		draw(cosmetic, sweep, bend, lift);
 		if (style != null && style.glint) Glint.render(new Runnable() {
 			@Override
 			public void run() {
-				drawPair(sweep, bend, lift);
+				draw(cosmetic, sweep, bend, lift);
 			}
 		});
 		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
@@ -59,12 +71,13 @@ final class WingsRenderer {
 	}
 
 	/** Asas sem jogador (tela inicial): batida lenta. */
-	static void renderPreview(PlayerEntityModel model, Identifier texture, CosmeticStyle style, boolean behindCape, float seconds) {
+	static void renderPreview(PlayerEntityModel model, Cosmetic cosmetic, Identifier texture, CosmeticStyle style, boolean behindCape, float seconds) {
 		MinecraftClient.getInstance().getTextureManager().bindTexture(texture);
 		GlStateManager.pushMatrix();
 		model.body.preRender(0.0625F);
 		GlStateManager.scale(0.0625F, 0.0625F, 0.0625F);
-		GlStateManager.translate(0.0F, 3.0F, behindCape ? 3.4F : 2.2F);
+		if (cosmetic != null && cosmetic.voxel) GlStateManager.translate(0.0F, 2.0F, behindCape ? 3.9F : 2.9F);
+		else GlStateManager.translate(0.0F, 3.0F, behindCape ? 3.4F : 2.2F);
 		GlStateManager.enableAlphaTest();
 		GlStateManager.alphaFunc(516, 0.1F);
 		float phase = seconds * 2.4F;
@@ -72,15 +85,56 @@ final class WingsRenderer {
 		final float bend = 14.0F + 10.0F * (float) Math.sin(phase - 0.8F);
 		final float lift = 5.0F * (float) Math.sin(phase + 0.5F) - 4.0F;
 		Glint.tint(style);
-		drawPair(sweep, bend, lift);
+		draw(cosmetic, sweep, bend, lift);
 		if (style != null && style.glint) Glint.render(new Runnable() {
 			@Override
 			public void run() {
-				drawPair(sweep, bend, lift);
+				draw(cosmetic, sweep, bend, lift);
 			}
 		});
 		GlStateManager.color(1.0F, 1.0F, 1.0F, 1.0F);
 		GlStateManager.popMatrix();
+	}
+
+	/** Asas lisas ou 3D de blocos (dragão). */
+	private static void draw(Cosmetic cosmetic, float sweep, float bend, float lift) {
+		VoxelWing mesh = cosmetic != null && cosmetic.voxel ? mesh(cosmetic) : null;
+		if (mesh == null) {
+			if (cosmetic == null || !cosmetic.voxel) drawPair(sweep, bend, lift);
+			return;
+		}
+		for (int side = -1; side <= 1; side += 2) {
+			GlStateManager.pushMatrix();
+			GlStateManager.scale((float) side, 1.0F, 1.0F);
+			GlStateManager.rotate(lift - 6.0F, 0.0F, 0.0F, 1.0F);
+			GlStateManager.rotate(sweep, 0.0F, 1.0F, 0.0F);
+			drawFaces(mesh.inner);
+			GlStateManager.translate(-mesh.innerLength, 0.0F, 0.0F);
+			GlStateManager.rotate(bend, 0.0F, 1.0F, 0.0F);
+			drawFaces(mesh.outer);
+			GlStateManager.popMatrix();
+		}
+	}
+
+	private static VoxelWing mesh(Cosmetic cosmetic) {
+		VoxelWing cached = MESHES.get(cosmetic.key());
+		if (cached != null) return cached;
+		int[] data = CosmeticTextures.alpha(cosmetic);
+		if (data == null) return null;
+		int[] alpha = java.util.Arrays.copyOfRange(data, 2, data.length);
+		VoxelWing mesh = VoxelWing.build(data[0], data[1], alpha, VOXEL_SPAN, VOXEL_HEIGHT, VOXEL_JOINT_V, VOXEL_HINGE_U);
+		MESHES.put(cosmetic.key(), mesh);
+		return mesh;
+	}
+
+	private static void drawFaces(float[] faces) {
+		Tessellator tessellator = Tessellator.getInstance();
+		BufferBuilder buffer = tessellator.getBuffer();
+		buffer.begin(7, VertexFormats.POSITION_TEXTURE_NORMAL);
+		for (int i = 0; i + 7 < faces.length; i += 8) {
+			buffer.vertex(faces[i], faces[i + 1], faces[i + 2]).texture(faces[i + 3], faces[i + 4]).normal(faces[i + 5], faces[i + 6], faces[i + 7]).next();
+		}
+		tessellator.draw();
 	}
 
 	private static void drawPair(float sweep, float bend, float lift) {
