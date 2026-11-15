@@ -96,20 +96,6 @@ jobs:
           ./gradlew build --stacktrace
           ls -la build/libs
 
-      - name: Código do Minecraft 1.21.11 (temporário)
-        working-directory: client-mod-1.21.11
-        run: |
-          ./gradlew genSources --stacktrace
-          find ~/.gradle .gradle -name "*minecraft*sources.jar" 2>/dev/null
-          mkdir -p /tmp/mcsrc
-          cp $(find ~/.gradle .gradle -name "*minecraft*sources.jar" 2>/dev/null | head -1) /tmp/mcsrc/minecraft-1.21.11-sources.jar
-
-      - name: Upload código do Minecraft (temporário)
-        uses: actions/upload-artifact@v7
-        with:
-          name: minecraft-1.21.11-sources
-          path: /tmp/mcsrc/minecraft-1.21.11-sources.jar
-
       - name: Upload mod
         uses: actions/upload-artifact@v7
         with:
