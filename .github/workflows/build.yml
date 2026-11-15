@@ -51,14 +51,6 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
           ls -la build/libs
-          echo "== Diagnóstico (temporário): opções do FPS Boost"
-          MCJAR=""
-          for j in $(find .gradle ~/.gradle -name "*.jar" 2>/dev/null | grep -v -e sources -e mappings); do
-            if unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/client/MinecraftClient.class"; then MCJAR="$j"; break; fi
-          done
-          if [ -n "$MCJAR" ]; then
-            javap -c -p -classpath "$MCJAR" net.minecraft.client.option.GameOptions | grep -A4 -E 'String (particles|renderClouds|entityShadows|fancyGraphics|ao|renderDistance|maxFps|enableVsync):' | grep -E "String|getfield" | head -40
-          fi
           echo "Alvos dos mixins no .jar final (devem estar em nomes intermediary):"
           mkdir -p /tmp/modjar && unzip -qo build/libs/zadrinth-client-*.jar -d /tmp/modjar
           unzip -l build/libs/zadrinth-client-*.jar | grep -iE "refmap|mixins.json" || true
