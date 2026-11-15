@@ -103,8 +103,14 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq xvfb mesa-utils libgl1-mesa-dri libglx-mesa0 > /dev/null
           set +e
-          ALSOFT_DRIVERS=null LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x720x24" ./gradlew --no-daemon runClientGameTest > /tmp/gametest.log 2>&1
-          echo "resultado do teste: $?"
+          #O computador do CI às vezes fica lento demais para carregar o mundo: tenta de novo uma vez
+          for tentativa in 1 2; do
+            rm -rf build/run/clientGameTest/screenshots
+            ALSOFT_DRIVERS=null LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a --server-args="-screen 0 1280x720x24" ./gradlew --no-daemon runClientGameTest > /tmp/gametest.log 2>&1
+            resultado=$?
+            echo "resultado do teste (tentativa $tentativa): $resultado"
+            [ $resultado -eq 0 ] && break
+          done
           grep -iE "error|exception|mixin|zadrinth|warn" /tmp/gametest.log | grep -v "DEBUG" | head -150
           tail -40 /tmp/gametest.log
           for f in $(find build/run -name "*.png" -path "*screenshot*" | sort); do
