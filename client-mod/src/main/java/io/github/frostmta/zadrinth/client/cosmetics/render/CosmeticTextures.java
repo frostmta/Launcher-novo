@@ -23,6 +23,8 @@ import java.util.Set;
 public final class CosmeticTextures {
 	private static final Map<String, Identifier> CACHE = new HashMap<>();
 	private static final Set<String> FAILED = new HashSet<>();
+	/** Alfa dos pixels das asas 3D: {largura, altura, alfa...} */
+	private static final Map<String, int[]> ALPHA = new HashMap<>();
 
 	private CosmeticTextures() {
 	}
@@ -35,6 +37,7 @@ public final class CosmeticTextures {
 			if (in == null) throw new IllegalStateException("textura não encontrada: " + cosmetic.texturePath());
 			BufferedImage image = ImageIO.read(in);
 			if (image == null) throw new IllegalStateException("textura inválida: " + cosmetic.texturePath());
+			if (cosmetic.voxel && !ALPHA.containsKey(cosmetic.key())) ALPHA.put(cosmetic.key(), alphaOf(image));
 			if (gray) image = grayscale(image);
 			String name = "zadrinth_" + cosmetic.type.folder + "_" + cosmetic.id + (gray ? "_gray" : "");
 			Identifier id = MinecraftClient.getInstance().getTextureManager()
@@ -49,6 +52,22 @@ public final class CosmeticTextures {
 	}
 
 	/** Luminância um pouco clareada (o tingimento multiplica e escureceria demais). */
+	/** {largura, altura, alfa de cada pixel...} da asa 3D (depois de carregar a textura). */
+	public static int[] alpha(Cosmetic cosmetic) {
+		return ALPHA.get(cosmetic.key());
+	}
+
+	private static int[] alphaOf(BufferedImage image) {
+		int w = image.getWidth(), h = image.getHeight();
+		int[] out = new int[2 + w * h];
+		out[0] = w;
+		out[1] = h;
+		for (int y = 0; y < h; y++) {
+			for (int x = 0; x < w; x++) out[2 + y * w + x] = image.getRGB(x, y) >>> 24;
+		}
+		return out;
+	}
+
 	private static BufferedImage grayscale(BufferedImage source) {
 		int w = source.getWidth();
 		int h = source.getHeight();

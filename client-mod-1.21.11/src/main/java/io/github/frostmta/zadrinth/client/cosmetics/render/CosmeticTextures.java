@@ -22,6 +22,8 @@ public final class CosmeticTextures {
 	private static final Map<String, Identifier> CACHE = new HashMap<>();
 	private static final Set<String> FAILED = new HashSet<>();
 	private static final Map<Identifier, int[]> SIZES = new HashMap<>();
+	/** Alfa dos pixels das asas 3D: {largura, altura, alfa...} */
+	private static final Map<String, int[]> ALPHA = new HashMap<>();
 
 	private CosmeticTextures() {
 	}
@@ -34,6 +36,7 @@ public final class CosmeticTextures {
 		try (InputStream in = CosmeticTextures.class.getResourceAsStream(cosmetic.texturePath())) {
 			if (in == null) throw new IllegalStateException("textura não encontrada: " + cosmetic.texturePath());
 			NativeImage image = NativeImage.read(in);
+			if (cosmetic.voxel && !ALPHA.containsKey(cosmetic.key())) ALPHA.put(cosmetic.key(), alphaOf(image));
 			if (gray) grayscale(image);
 			String name = "zadrinth_" + cosmetic.type.folder + "_" + cosmetic.id + (gray ? "_gray" : "");
 			Identifier id = ZadrinthClient.id("dynamic/" + cosmetic.type.folder + "/" + cosmetic.id + (gray ? "_gray" : ""));
@@ -46,6 +49,22 @@ public final class CosmeticTextures {
 			ZadrinthClient.LOGGER.warn("Não foi possível carregar o cosmético {}: {}", cosmetic.key(), e.toString());
 			return null;
 		}
+	}
+
+	/** {largura, altura, alfa de cada pixel...} da asa 3D (depois de carregar a textura). */
+	public static int[] alpha(Cosmetic cosmetic) {
+		return ALPHA.get(cosmetic.key());
+	}
+
+	private static int[] alphaOf(NativeImage image) {
+		int w = image.getWidth(), h = image.getHeight();
+		int[] out = new int[2 + w * h];
+		out[0] = w;
+		out[1] = h;
+		for (int y = 0; y < h; y++) {
+			for (int x = 0; x < w; x++) out[2 + y * w + x] = image.getPixel(x, y) >>> 24;
+		}
+		return out;
 	}
 
 	/** Largura e altura da textura (para desenhar partes dela na tela). */

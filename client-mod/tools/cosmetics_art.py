@@ -992,3 +992,268 @@ def build_anim_capes(out_dir, preview=None):
             img.alpha_composite(f.resize((80, 128), Image.NEAREST), (i * 90 + 5, 6))
         img.save(preview)
     print('animated capes', len(ANIM_CAPES))
+
+
+# ------------------------------------------------------------------ capas de traço e asas de dragão 3D
+# Itens novos da loja: capas de traço (linhas brancas no preto) e asas de dragão 3D.
+# Executado junto com cosmetics_art.py (usa hexrgb, to_img, cape_texture etc.).
+
+DW = 32  # asa 3D: 32x32 pixels (cada pixel vira um bloquinho)
+DRAGON_SHOULDER = np.array([0.0, 0.30])
+DRAGON_WRIST = np.array([0.42, 0.09])
+
+
+def _poly(d, pts, s, fill):
+    d.polygon([(float(p[0]) * s, float(p[1]) * s) for p in pts], fill=fill)
+
+
+def _line(d, a, b, s, width, fill):
+    d.line([(float(a[0]) * s, float(a[1]) * s), (float(b[0]) * s, float(b[1]) * s)], fill=fill, width=width)
+
+
+def dragon_wing(pal, seed):
+    """Asa de dragão em pixel art 32x32. Alfa: 255 osso, 254 garra, 253 membrana."""
+    S = 8  # supersampling
+    N = DW * S
+    cls = Image.new('L', (N, N), 0)  # 0 vazio, 1 membrana, 2 garra, 3 osso
+    d = ImageDraw.Draw(cls)
+    sh, wr = DRAGON_SHOULDER, DRAGON_WRIST
+    tips = [np.array(p) for p in ((0.99, 0.02), (0.95, 0.56), (0.72, 0.92), (0.40, 0.99))]
+    # membrana: ombro, punho, pontas com recortes fundos entre os dedos e volta pelo corpo
+    poly = [sh, wr, tips[0]]
+    for k, (a, b) in enumerate(zip(tips[:-1], tips[1:])):
+        mid = (a + b) / 2
+        inward = wr + (mid - wr) * (0.52 if k == 0 else 0.60)
+        for t in np.linspace(0, 1, 11)[1:-1]:
+            poly.append((1 - t) ** 2 * a + 2 * (1 - t) * t * inward + t ** 2 * b)
+        poly.append(b)
+    last = tips[-1]
+    inward = np.array((0.22, 0.60))
+    for t in np.linspace(0, 1, 9)[1:-1]:
+        poly.append((1 - t) ** 2 * last + 2 * (1 - t) * t * inward + t ** 2 * np.array((0.02, 0.56)))
+    poly += [np.array((0.02, 0.56)), sh]
+    _poly(d, poly, N, 1)
+    # ossos: braço grosso e dedos que afinam
+    _line(d, sh, wr, N, int(S * 2.8), 3)
+    for i, tp in enumerate(tips):
+        _line(d, wr, tp, N, int(S * (2.3 - i * 0.35)), 3)
+    # garra de cima (no punho), espinhos no braço e garras nas pontas
+    _poly(d, [wr + (-0.05, 0.02), wr + (0.03, -0.13), wr + (0.07, -0.10), wr + (0.04, 0.03)], N, 2)
+    for t in (0.25, 0.55, 0.80):
+        base = sh + (wr - sh) * t
+        _poly(d, [base + (-0.035, 0.0), base + (0.0, -0.085), base + (0.03, 0.0)], N, 2)
+    for t in (0.30, 0.55, 0.78):
+        base = wr + (tips[0] - wr) * t
+        _poly(d, [base + (-0.035, 0.01), base + (0.02, -0.075), base + (0.04, 0.01)], N, 2)
+    for tp in tips[:3]:
+        dirv = (tp - wr) / np.linalg.norm(tp - wr)
+        side = np.array((-dirv[1], dirv[0]))
+        _poly(d, [tp - dirv * 0.05 + side * 0.03, tp + dirv * 0.05, tp - dirv * 0.05 - side * 0.03], N, 2)
+    d.ellipse([wr[0] * N - S * 1.8, wr[1] * N - S * 1.8, wr[0] * N + S * 1.8, wr[1] * N + S * 1.8], fill=3)
+
+    # reduz para 32x32 pegando a classe mais comum de cada bloco (sem borrão)
+    big = np.asarray(cls)
+    blocks = big.reshape(DW, S, DW, S).transpose(0, 2, 1, 3).reshape(DW, DW, S * S)
+    counts = np.stack([(blocks == k).sum(-1) for k in range(4)], -1)
+    grid = counts.argmax(-1)
+    grid[(counts[..., 0] > S * S * 0.55)] = 0
+
+    # cores por classe, com luz em cima e sombra embaixo (estilo pixel art)
+    yy, xx = np.mgrid[0:DW, 0:DW].astype(np.float32) / DW
+    rgb = np.zeros((DW, DW, 3), np.float32)
+    n = value_noise(DW, DW, 5, seed, 3)
+    dist = np.sqrt((xx - wr[0]) ** 2 + (yy - wr[1]) ** 2)
+    mem_t = np.clip(dist * 1.05 + (n - 0.5) * 0.3, 0, 1)
+    mem = ramp([(0, pal['mem_light']), (0.5, pal['mem_mid']), (1, pal['mem_dark'])], mem_t)
+    bone_t = np.clip(xx * 0.9 + (n - 0.5) * 0.2, 0, 1)
+    bone = ramp([(0, pal['bone_mid']), (1, pal['bone_light'])], bone_t)
+    claw = ramp([(0, pal['claw_mid']), (1, pal['claw'])], np.clip(1 - yy, 0, 1))
+    rgb[grid == 1] = mem[grid == 1]
+    rgb[grid == 3] = bone[grid == 3]
+    rgb[grid == 2] = claw[grid == 2]
+    # veias da membrana (linhas de 1 px partindo do punho)
+    for tp in ((0.84, 0.36), (0.55, 0.80)):
+        for t in np.linspace(0.25, 0.80, 40):
+            p = wr + (np.array(tp) - wr) * t
+            x, y = int(p[0] * DW), int(p[1] * DW)
+            if 0 <= x < DW and 0 <= y < DW and grid[y, x] == 1:
+                rgb[y, x] = rgb[y, x] * 0.78 + hexrgb(pal['vein']) * 0.22
+    # luz e sombra nos ossos/garras: pixel de cima claro, de baixo escuro
+    solid = grid > 0
+    up = np.roll(grid, 1, 0); up[0, :] = 0
+    down = np.roll(grid, -1, 0); down[-1, :] = 0
+    hard = grid >= 2
+    rgb[hard & (up < 2)] = np.minimum(rgb[hard & (up < 2)] * 1.18 + 18, 255)
+    rgb[hard & (down < 2)] = rgb[hard & (down < 2)] * 0.72
+    # contorno: borda de cada parte mais escura
+    left = np.roll(grid, 1, 1); left[:, 0] = 0
+    right = np.roll(grid, -1, 1); right[:, -1] = 0
+    edge = solid & ((up == 0) | (down == 0) | (left == 0) | (right == 0))
+    rgb[edge & (grid == 1)] = hexrgb(pal['outline']) * 0.6 + rgb[edge & (grid == 1)] * 0.4
+    bone_edge = hard & ((up < 2) & (down < 2)) == False
+    alpha = np.where(grid == 3, 255, np.where(grid == 2, 254, np.where(grid == 1, 253, 0))).astype(np.uint8)
+    out = np.concatenate([np.clip(rgb, 0, 255).astype(np.uint8), alpha[..., None]], -1)
+    return Image.fromarray(out, 'RGBA')
+
+
+DRAGON_WINGS = [
+    ('dragao_gelo', 'Dragão de Gelo', dict(bone_light='#c9fff7', bone_mid='#3fc8ec', claw='#f4feff', claw_mid='#8fdcff',
+                                          mem_light='#4d6ee8', mem_mid='#2b3aa6', mem_dark='#171c58', vein='#7fe7ff', outline='#0b1036'), 91),
+    ('dragao_rubi', 'Dragão Rubi', dict(bone_light='#ffe0a0', bone_mid='#ff7a2a', claw='#fff6e0', claw_mid='#ffc070',
+                                       mem_light='#d8323c', mem_mid='#8e1424', mem_dark='#3a0612', vein='#ff9a5a', outline='#200306'), 92),
+    ('dragao_vazio', 'Dragão do Vazio', dict(bone_light='#f6ccff', bone_mid='#b45cff', claw='#ffffff', claw_mid='#e0b4ff',
+                                            mem_light='#6a34cc', mem_mid='#3a1c80', mem_dark='#160a36', vein='#d58cff', outline='#08031a'), 93),
+]
+
+
+# ------------------------------------------------------------------ capas de traço (linhas brancas no preto)
+LS = 4  # supersampling das linhas
+
+
+def _line_canvas():
+    return Image.new('L', (FW * LS, FH * LS), 0)
+
+
+def _finish_lines(canvas, threshold=0.38):
+    """Reduz o desenho para 40x64 com linhas nítidas de 1 px."""
+    a = np.asarray(canvas.resize((FW, FH), Image.BOX)).astype(np.float32) / 255.0
+    return a > threshold
+
+
+def _ornament(d, s):
+    """Moldura: linha fina por dentro da borda e cantos com losango."""
+    w, h = FW * s, FH * s
+    m = 3 * s
+    d.rectangle([m, m, w - m - 1, h - m - 1], outline=255, width=s)
+    for cx, cy, sx, sy in ((m, m, 1, 1), (w - m - 1, m, -1, 1), (m, h - m - 1, 1, -1), (w - m - 1, h - m - 1, -1, -1)):
+        d.line([cx, cy + sy * 5 * s, cx + sx * 5 * s, cy], fill=255, width=s)
+        dx, dy = cx + sx * 3 * s, cy + sy * 3 * s
+        d.polygon([(dx, dy - s * 1.2), (dx + s * 1.2, dy), (dx, dy + s * 1.2), (dx - s * 1.2, dy)], fill=255)
+
+
+def _line_cape(draw_fn, seed):
+    canvas = _line_canvas()
+    d = ImageDraw.Draw(canvas)
+    _ornament(d, LS)
+    draw_fn(d, LS)
+    lines = _finish_lines(canvas)
+    face = np.zeros((FH, FW, 3), np.float32)
+    face[:] = hexrgb('#050507')
+    # textura bem sutil no preto (tecido)
+    n = value_noise(FW, FH, 8, seed, 2)
+    face += (n[..., None] - 0.5) * 10
+    face[lines] = hexrgb('#f4f4f6')
+    # borda externa fina branca (como um contorno da capa)
+    face[0, :] = face[-1, :] = hexrgb('#d8d8dc')
+    face[:, 0] = face[:, -1] = hexrgb('#d8d8dc')
+    inner = np.zeros((FH, FW, 3), np.float32)
+    inner[:] = hexrgb('#101014')
+    inner += (value_noise(FW, FH, 6, seed + 1, 3)[..., None] - 0.5) * 12
+    return face, inner, hexrgb('#1a1a1f')
+
+
+def _sword(d, s):
+    """Lâmina apontando para baixo, com guarda em asas e raios de luz no pomo."""
+    cx = FW * s / 2
+    pommel, guard, tip = 12 * s, 23 * s, 57 * s
+    # raios de luz acima do pomo
+    for dx, length in ((0, 3.0), (-3.4, 2.2), (3.4, 2.2)):
+        d.line([cx + dx * s, pommel - 4.5 * s, cx + dx * 1.5 * s, pommel - (4.5 + length) * s], fill=255, width=s)
+    # pomo (losango) e cabo
+    d.line([(cx, pommel - 3 * s), (cx + 2.6 * s, pommel), (cx, pommel + 3 * s), (cx - 2.6 * s, pommel), (cx, pommel - 3 * s)], fill=255, width=s)
+    d.line([cx, pommel + 2.5 * s, cx, guard], fill=255, width=s)
+    # guarda curvada (duas asinhas)
+    for sx in (-1, 1):
+        pts = [(cx, guard), (cx + sx * 6 * s, guard - 2 * s), (cx + sx * 12 * s, guard - 6 * s), (cx + sx * 10 * s, guard - 1 * s),
+               (cx + sx * 5 * s, guard + 1.5 * s), (cx, guard + 1.5 * s)]
+        d.line(pts, fill=255, width=s)
+    # lâmina (contorno) com sulco no meio
+    blade = [(cx - 2.8 * s, guard + 2 * s), (cx + 2.8 * s, guard + 2 * s), (cx + 2.4 * s, tip - 7 * s), (cx, tip), (cx - 2.4 * s, tip - 7 * s),
+             (cx - 2.8 * s, guard + 2 * s)]
+    d.line(blade, fill=255, width=s)
+    d.line([cx, guard + 4 * s, cx, tip - 6 * s], fill=255, width=s)
+    # brilhos pequenos ao lado
+    for (x, y, r) in ((cx - 10 * s, 37 * s, 2.2), (cx + 11 * s, 45 * s, 1.6), (cx + 10 * s, 31 * s, 1.2)):
+        d.line([x - r * s, y, x + r * s, y], fill=255, width=s)
+        d.line([x, y - r * s, x, y + r * s], fill=255, width=s)
+
+
+def _north_star(d, s):
+    """Estrela polar de 4 pontas longas, com anel e estrelinhas."""
+    cx, cy = FW * s / 2, 30 * s
+    long_v, long_h, short = 23 * s, 14 * s, 6.5 * s
+    pts = [(cx, cy - long_v), (cx + short * 0.55, cy - short * 0.55), (cx + long_h, cy), (cx + short * 0.55, cy + short * 0.55),
+           (cx, cy + long_v), (cx - short * 0.55, cy + short * 0.55), (cx - long_h, cy), (cx - short * 0.55, cy - short * 0.55), (cx, cy - long_v)]
+    d.line(pts, fill=255, width=s)
+    d.polygon([(cx, cy - 2 * s), (cx + 2 * s, cy), (cx, cy + 2 * s), (cx - 2 * s, cy)], fill=255)
+    d.ellipse([cx - 9 * s, cy - 9 * s, cx + 9 * s, cy + 9 * s], outline=255, width=s)
+    # raios diagonais curtos por fora do anel
+    for sx, sy in ((1, 1), (1, -1), (-1, 1), (-1, -1)):
+        d.line([cx + sx * 7.5 * s, cy + sy * 7.5 * s, cx + sx * 11 * s, cy + sy * 11 * s], fill=255, width=s)
+    rng = np.random.default_rng(7)
+    for _ in range(9):
+        x, y = rng.uniform(7, FW - 7) * s, rng.uniform(8, FH - 8) * s
+        if abs(x - cx) < 10 * s and abs(y - cy) < 24 * s:
+            continue
+        d.rectangle([x, y, x + s - 1, y + s - 1], fill=255)
+
+
+def _gothic_moon(d, s):
+    """Lua crescente com espinhos subindo e uma estrela."""
+    cx, cy, r = FW * s / 2 + 1 * s, 24 * s, 10 * s
+    d.ellipse([cx - r, cy - r, cx + r, cy + r], outline=255, width=s)
+    # corta a lua com um círculo deslocado (desenhado em preto) e redesenha a borda de dentro
+    off = 5 * s
+    d.ellipse([cx - r + off, cy - r - 2 * s, cx + r + off, cy + r - 2 * s], fill=0)
+    d.arc([cx - r + off, cy - r - 2 * s, cx + r + off, cy + r - 2 * s], 100, 260, fill=255, width=s)
+    # estrela de 4 pontas dentro do crescente
+    sx, sy = cx + 6 * s, cy - 3 * s
+    d.line([sx, sy - 3 * s, sx, sy + 3 * s], fill=255, width=s)
+    d.line([sx - 3 * s, sy, sx + 3 * s, sy], fill=255, width=s)
+    # galho com espinhos descendo
+    stem = [(FW * s / 2 - 2 * s, cy + r - 1 * s)]
+    x, y = stem[0]
+    rng = np.random.default_rng(11)
+    for i in range(7):
+        y += 3.6 * s
+        x += (1 if i % 2 == 0 else -1) * 1.6 * s
+        stem.append((x, y))
+    d.line(stem, fill=255, width=s)
+    for i, (x, y) in enumerate(stem[1:-1]):
+        side = 1 if i % 2 == 0 else -1
+        d.line([x, y, x + side * 3.5 * s, y - 1.5 * s], fill=255, width=s)
+        d.line([x + side * 3.5 * s, y - 1.5 * s, x + side * 4.6 * s, y - 3.4 * s], fill=255, width=s)
+    d.line([(x - 1.4 * s, y), (x, y + 2.8 * s), (x + 1.4 * s, y), (x, y - 1 * s), (x - 1.4 * s, y)], fill=255, width=s)
+
+
+LINE_CAPES = [
+    ('lamina_sagrada', 'Lâmina Sagrada', _sword, 101),
+    ('estrela_polar', 'Estrela Polar', _north_star, 102),
+    ('lua_gotica', 'Lua Gótica', _gothic_moon, 103),
+]
+
+
+def build_new_items(out_dir, preview=None):
+    os.makedirs(os.path.join(out_dir, 'capes'), exist_ok=True)
+    os.makedirs(os.path.join(out_dir, 'wings'), exist_ok=True)
+    faces, wings = [], []
+    for cid, _, fn, seed in LINE_CAPES:
+        face, inner, edge = _line_cape(fn, seed)
+        cape_texture(face, inner, edge).save(os.path.join(out_dir, 'capes', f'{cid}.png'))
+        faces.append(to_img(face))
+    for wid, _, pal, seed in DRAGON_WINGS:
+        tex = dragon_wing(pal, seed)
+        tex.save(os.path.join(out_dir, 'wings', f'{wid}.png'))
+        wings.append(tex)
+    if preview:
+        sheet = Image.new('RGBA', (3 * 180 + 20 + 3 * 300, 300), (40, 36, 52, 255))
+        x = 20
+        for f in faces:
+            sheet.alpha_composite(f.resize((160, 256), Image.NEAREST), (x, 20))
+            x += 180
+        for w in wings:
+            big = w.resize((128, 128), Image.NEAREST)
+            sheet.alpha_composite(big.transpose(Image.FLIP_LEFT_RIGHT), (x, 60))
+            sheet.alpha_composite(big, (x + 140, 60))
+            x += 300
+        sheet.save(preview)

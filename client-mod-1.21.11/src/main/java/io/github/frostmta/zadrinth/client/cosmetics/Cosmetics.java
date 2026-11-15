@@ -43,6 +43,14 @@ public final class Cosmetics {
 		add(new Cosmetic("orgulho", CosmeticType.CAPE, "Orgulho",
 				"Bandeira arco-íris em apoio à comunidade LGBTQIA+.", 0xFFFF8C00).animated(12, 100));
 
+		//Capas de traço: desenho em linha branca no preto
+		add(new Cosmetic("lamina_sagrada", CosmeticType.CAPE, "Lâmina Sagrada",
+				"Uma espada de luz em traço branco no preto.", 0xFFF4F4F6));
+		add(new Cosmetic("estrela_polar", CosmeticType.CAPE, "Estrela Polar",
+				"Estrela de quatro pontas em traço fino.", 0xFFE6ECFF));
+		add(new Cosmetic("lua_gotica", CosmeticType.CAPE, "Lua Gótica",
+				"Lua crescente com galho de espinhos.", 0xFFD8D8E8));
+
 		//Asas
 		add(new Cosmetic("demonio", CosmeticType.WINGS, "Asas de Demônio",
 				"Membrana carmesim com garras de osso.", 0xFFE2384A));
@@ -54,6 +62,13 @@ public final class Cosmetics {
 				"Penas escuras com brilho violeta.", 0xFF8A76D0));
 		add(new Cosmetic("cristal", CosmeticType.WINGS, "Asas de Cristal",
 				"Lâminas de cristal que refletem a luz.", 0xFFC9B8FF));
+		//Asas 3D (cada pixel vira um bloquinho com espessura)
+		add(new Cosmetic("dragao_gelo", CosmeticType.WINGS, "Dragão de Gelo 3D",
+				"Asas de dragão em 3D, com ossos de gelo e garras.", 0xFF3FC8EC).voxel());
+		add(new Cosmetic("dragao_rubi", CosmeticType.WINGS, "Dragão Rubi 3D",
+				"Asas de dragão em 3D, vermelhas como brasa.", 0xFFFF5A2A).voxel());
+		add(new Cosmetic("dragao_vazio", CosmeticType.WINGS, "Dragão do Vazio 3D",
+				"Asas de dragão em 3D, roxas como o End.", 0xFFB45CFF).voxel());
 
 		//Bandanas
 		add(new Cosmetic("ninja", CosmeticType.BANDANA, "Ninja Violeta",

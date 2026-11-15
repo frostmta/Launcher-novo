@@ -21,6 +21,8 @@ public final class Cosmetic {
 	public int frames = 1;
 	/** Duração de cada quadro (ms) */
 	public int frameMillis = 70;
+	/** Asa 3D: cada pixel da textura vira um bloquinho (VoxelWing) */
+	public boolean voxel;
 
 	Cosmetic(String id, CosmeticType type, String name, String description, int accent) {
 		this(id, type, name, description, 0, Currency.FREE, accent);
@@ -49,6 +51,12 @@ public final class Cosmetic {
 	Cosmetic animated(int frames, int frameMillis) {
 		this.frames = Math.max(1, frames);
 		this.frameMillis = Math.max(16, frameMillis);
+		return this;
+	}
+
+	/** Asa em 3D de blocos (a espessura vem do alfa da textura). */
+	Cosmetic voxel() {
+		this.voxel = true;
 		return this;
 	}
 
