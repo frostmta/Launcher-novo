@@ -25,6 +25,22 @@ public final class Cosmetics {
 		add(new Cosmetic("chamas_etereas", CosmeticType.CAPE, "Chamas Etéreas",
 				"Fogo espiritual azul e violeta.", 0xFF4FB8FF));
 
+		//Capas animadas (12 quadros)
+		add(new Cosmetic("vortice", CosmeticType.CAPE, "Vórtice Galáctico",
+				"Uma galáxia em espiral girando nas suas costas.", 0xFFB56CFF).animated(12, 90));
+		add(new Cosmetic("inferno", CosmeticType.CAPE, "Inferno",
+				"Labaredas subindo sem parar, com brasas voando.", 0xFFFF7A12).animated(12, 70));
+		add(new Cosmetic("aurora_viva", CosmeticType.CAPE, "Aurora Viva",
+				"As luzes do norte dançando de verdade.", 0xFF38F2A0).animated(12, 110));
+		add(new Cosmetic("tempestade", CosmeticType.CAPE, "Tempestade",
+				"Chuva caindo e raios cortando o céu.", 0xFF6E8BD6).animated(12, 90));
+		add(new Cosmetic("mare", CosmeticType.CAPE, "Maré Noturna",
+				"Ondas rolando sob a lua cheia.", 0xFF4F9BFF).animated(12, 110));
+		add(new Cosmetic("prisma", CosmeticType.CAPE, "Prisma RGB",
+				"Arco-íris correndo em volta do cristal do Zadrinth.", 0xFFFFFFFF).animated(12, 80));
+		add(new Cosmetic("chuva_digital", CosmeticType.CAPE, "Chuva Digital",
+				"Código verde caindo como chuva.", 0xFF22E06A).animated(12, 80));
+
 		//Asas
 		add(new Cosmetic("demonio", CosmeticType.WINGS, "Asas de Demônio",
 				"Membrana carmesim com garras de osso.", 0xFFE2384A));

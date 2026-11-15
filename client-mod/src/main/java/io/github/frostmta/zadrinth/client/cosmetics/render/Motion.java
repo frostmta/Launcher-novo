@@ -17,9 +17,12 @@ final class Motion {
 
 	static Motion of(AbstractClientPlayerEntity player, float tickDelta) {
 		Motion motion = new Motion();
-		double dx = lerp(tickDelta, player.prevCapeX, player.capeX) - lerp(tickDelta, player.prevX, player.x);
-		double dy = lerp(tickDelta, player.prevCapeY, player.capeY) - lerp(tickDelta, player.prevY, player.y);
-		double dz = lerp(tickDelta, player.prevCapeZ, player.capeZ) - lerp(tickDelta, player.prevZ, player.z);
+		//ATENÇÃO: no yarn do 1.8.9 "capeX" é a posição ANTERIOR e "prevCapeX" é a ATUAL
+		//(conferido no bytecode da capa do jogo). Ao contrário, a interpolação anda para trás
+		//a cada tick e a capa fica tremendo/travando ao andar.
+		double dx = lerp(tickDelta, player.capeX, player.prevCapeX) - lerp(tickDelta, player.prevX, player.x);
+		double dy = lerp(tickDelta, player.capeY, player.prevCapeY) - lerp(tickDelta, player.prevY, player.y);
+		double dz = lerp(tickDelta, player.capeZ, player.prevCapeZ) - lerp(tickDelta, player.prevZ, player.z);
 		float bodyYaw = player.prevBodyYaw + (player.bodyYaw - player.prevBodyYaw) * tickDelta;
 		double sin = MathHelper.sin(bodyYaw * (float) Math.PI / 180.0F);
 		double cos = -MathHelper.cos(bodyYaw * (float) Math.PI / 180.0F);

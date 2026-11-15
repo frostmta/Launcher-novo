@@ -1,7 +1,7 @@
 package io.github.frostmta.zadrinth.client.module;
 
 public enum Category {
-	ALL("Todos"), HUD("HUD"), PVP("PvP"), VISUAL("Visual"), CLIENT("Cliente");
+	ALL("Todos"), HUD("HUD"), PVP("PvP"), VISUAL("Visual"), PERFORMANCE("FPS"), CLIENT("Cliente");
 
 	public final String label;
 

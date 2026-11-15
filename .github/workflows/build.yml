@@ -51,18 +51,13 @@ jobs:
           chmod +x gradlew
           ./gradlew build --stacktrace
           ls -la build/libs
-          echo "== Diagnóstico (temporário): capa e opções"
+          echo "== Diagnóstico (temporário): opções do FPS Boost"
           MCJAR=""
           for j in $(find .gradle ~/.gradle -name "*.jar" 2>/dev/null | grep -v -e sources -e mappings); do
             if unzip -l "$j" 2>/dev/null | grep -q "net/minecraft/client/MinecraftClient.class"; then MCJAR="$j"; break; fi
           done
           if [ -n "$MCJAR" ]; then
-            echo "--- CapeFeatureRenderer"
-            javap -c -p -classpath "$MCJAR" net.minecraft.client.render.entity.feature.CapeFeatureRenderer | grep -E "getfield|invoke|ldc|fconst|fload|fmul|fadd|fsub" | head -120
-            echo "--- PlayerEntity (capa)"
-            javap -c -p -classpath "$MCJAR" net.minecraft.entity.player.PlayerEntity | grep -nE "capeX|capeY|capeZ|prevCapeX|StrideDistance|HorizontalSpeed" | head -40
-            echo "--- GameOptions.save"
-            javap -c -p -classpath "$MCJAR" net.minecraft.client.option.GameOptions | sed -n '/ save();/,/return/p' | grep -E "ldc|getfield" | head -140
+            javap -c -p -classpath "$MCJAR" net.minecraft.client.option.GameOptions | grep -A4 -E 'String (particles|renderClouds|entityShadows|fancyGraphics|ao|renderDistance|maxFps|enableVsync):' | grep -E "String|getfield" | head -40
           fi
           echo "Alvos dos mixins no .jar final (devem estar em nomes intermediary):"
           mkdir -p /tmp/modjar && unzip -qo build/libs/zadrinth-client-*.jar -d /tmp/modjar

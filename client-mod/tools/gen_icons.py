@@ -138,10 +138,19 @@ def icon(i):
         arc(d, [4, 30, 124, 170], 206, 334, LW)
         arc(d, [4, -42, 124, 98], 26, 154, LW)
         d.ellipse([42, 42, 86, 86], fill=W); d.ellipse([56, 56, 72, 72], fill=(0, 0, 0, 0))
+    elif i == 34:  # foguete (FPS Boost)
+        d.polygon([(64, 6), (88, 34), (88, 84), (40, 84), (40, 34)], outline=W, width=9)
+        d.ellipse([54, 36, 74, 56], outline=W, width=7)
+        d.polygon([(40, 60), (18, 92), (40, 84)], fill=W); d.polygon([(88, 60), (110, 92), (88, 84)], fill=W)
+        d.polygon([(50, 90), (78, 90), (64, 122)], fill=W)
+    elif i == 35:  # cursor clicando (auto clicker)
+        d.polygon([(30, 18), (30, 104), (52, 84), (68, 118), (84, 110), (68, 78), (96, 76)], outline=W, width=9)
+        for a, b in (((92, 18), (104, 6)), ((100, 40), (118, 36)), ((74, 12), (74, -2))):
+            d.line([a, b], fill=W, width=8)
     return im.resize((32, 32), Image.LANCZOS)
 
 atlas = Image.new('RGBA', (256, 256), (0, 0, 0, 0))
-for i in range(34):
+for i in range(36):
     atlas.alpha_composite(icon(i), ((i % 8) * 32, (i // 8) * 32))
 atlas.save(OUT)
 prev = Image.new('RGBA', (512, 512), (40, 36, 56, 255)); prev.alpha_composite(atlas.resize((512, 512), Image.LANCZOS))

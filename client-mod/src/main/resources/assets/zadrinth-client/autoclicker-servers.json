@@ -1,0 +1,4 @@
+{
+  "_comment": "Servidores onde o Auto Clicker do Zadrinth Client pode ser usado. Coloque SÓ servidores seus ou que liberam auto clicker. Em servidores como Mush, Hylex, GladMC e Hypixel ele é proibido e dá ban. Um mundo singleplayer sempre funciona. Ex.: \"meuservidor.com\" (sem porta) ou \"meuservidor.com:25570\".",
+  "servers": []
+}
