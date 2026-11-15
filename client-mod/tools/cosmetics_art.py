@@ -923,9 +923,52 @@ def anim_digital(t):
     return trim(sky, '#22e06a'), lining('#031208', 162), hexrgb('#0c3a1c')
 
 
+def heart_mask(w, h, cx, cy, r, ss=8):
+    """Coração (dois círculos + ponta) com bordas suaves, valores 0..1."""
+    big = Image.new('L', (w * ss, h * ss), 0)
+    d = ImageDraw.Draw(big)
+    lr = r * 0.56
+    for sx in (-1, 1):
+        ox, oy = (cx + sx * r * 0.5) * ss, (cy - r * 0.32) * ss
+        d.ellipse([ox - lr * ss, oy - lr * ss, ox + lr * ss, oy + lr * ss], fill=255)
+    d.polygon([((cx - r * 1.04) * ss, (cy - r * 0.12) * ss), ((cx + r * 1.04) * ss, (cy - r * 0.12) * ss),
+               (cx * ss, (cy + r * 1.05) * ss)], fill=255)
+    return np.asarray(big.resize((w, h), Image.LANCZOS), np.float32) / 255.0
+
+
+def anim_pride(t):
+    """Orgulho: bandeira arco-íris de 6 faixas balançando como tecido, com um
+    brilho passando e um coração no meio. Em apoio à comunidade LGBTQIA+."""
+    yy, xx = np.mgrid[0:FH, 0:FW].astype(np.float32)
+    p = t * 2 * math.pi
+    # As faixas ondulam um pouco, como bandeira ao vento
+    wave = 1.6 * np.sin(xx / FW * 2.4 * math.pi - p) * (0.4 + 0.6 * xx / FW)
+    band = np.clip(((yy - 2 + wave) / (FH - 4)) * 6, 0, 5.999).astype(int)
+    colors = np.array([hexrgb(c) for c in ('#e40303', '#ff8c00', '#ffed00', '#008026', '#004dff', '#750787')])
+    sky = colors[band].astype(np.float32)
+    # Dobras do tecido: claro/escuro acompanhando a onda
+    fold = np.cos(xx / FW * 2.4 * math.pi - p) * (0.4 + 0.6 * xx / FW)
+    sky *= (0.86 + 0.14 * fold)[..., None]
+    # Brilho de seda passando na diagonal
+    shine = np.exp(-(((xx * 0.7 + yy) / 90.0 - (t * 1.6 - 0.3)) * 7.0) ** 2)
+    sky += shine[..., None] * 90
+    # Coração branco no meio, pulsando de leve
+    cx, cy = FW / 2, 31.0
+    r = 7.0 * (1.0 + 0.05 * math.sin(p * 2))
+    heart = heart_mask(FW, FH, cx, cy, r)
+    ring = heart_mask(FW, FH, cx, cy, r + 1.4)
+    sky = add_glow(sky, cx, cy, 13, '#ffffff', 35)
+    shade = np.clip((yy - (cy - r)) / (2.2 * r), 0, 1)
+    white = hexrgb('#ffffff') * (1.0 - 0.10 * shade[..., None])
+    sky = sky * (1 - ring[..., None] * 0.55) + hexrgb('#1a0626') * ring[..., None] * 0.55
+    sky = sky * (1 - heart[..., None]) + white * heart[..., None]
+    return trim(np.clip(sky, 0, 255), '#ffffff', 2), lining('#1e0b2b', 171), hexrgb('#3b1450')
+
+
 ANIM_CAPES = [
     ('vortice', anim_vortex), ('inferno', anim_inferno), ('aurora_viva', anim_aurora),
     ('tempestade', anim_storm), ('mare', anim_tide), ('prisma', anim_prism), ('chuva_digital', anim_digital),
+    ('orgulho', anim_pride),
 ]
 
 
